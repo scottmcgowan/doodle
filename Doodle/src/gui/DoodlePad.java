@@ -36,8 +36,8 @@ public class DoodlePad extends JPanel {
 	
 	public DoodlePad() {
 		super();
-		this.setPreferredSize(new Dimension(500, 500));
-		this.setBackground(Color.WHITE);
+		this.setPreferredSize(new Dimension(width, height));
+		this.setBackground(Color.BLUE);
 		this.addMouseListener(new MListener());
 		this.addMouseMotionListener(new MListener());
 		curve = new CurvedLine();
