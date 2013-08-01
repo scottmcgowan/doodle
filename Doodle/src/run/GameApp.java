@@ -1,4 +1,6 @@
-package gui;
+package run;
+
+import gui.MainPanel;
 
 import javax.swing.JApplet;
 import javax.swing.SwingUtilities;
@@ -10,7 +12,7 @@ public class GameApp extends JApplet {
 	public void init() {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				setContentPane(new DoodlePad());
+				setContentPane(new MainPanel());
 				setSize(501, 501);
 			}
 		});

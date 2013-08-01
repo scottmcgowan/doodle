@@ -30,16 +30,18 @@ public class DoodlePad extends JPanel {
 	CurvedLine curve;
 	Point old;
 	
-	public static final World world = new World(new Vec2(0.0f, -10.0f));
+	private static World world;
+	
 	private static final int width = 500;
 	private static final int height = 500;
 	
-	public DoodlePad() {
+	public DoodlePad (World world) {
 		super();
 		this.setPreferredSize(new Dimension(500, 500));
 		this.setBackground(Color.WHITE);
 		this.addMouseListener(new MListener());
 		this.addMouseMotionListener(new MListener());
+		DoodlePad.world = world;
 		curve = new CurvedLine();
 		old = null;
 		
