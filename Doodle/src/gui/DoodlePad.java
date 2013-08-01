@@ -79,6 +79,19 @@ public class DoodlePad extends JPanel {
         
         world.createBody(bd).createFixture(fd);
     }
+
+    // Updates object positions
+    public void updatePos() {
+    	boolean toFall = true;
+    	List<Line2D.Double> lines = curve.getLine();
+    	for (Line2D.Double l: lines) {
+    		if (l.intersects(man)) {
+    			toFall = false;
+    		}
+    	} if (toFall) {
+    		man.fall();
+    	}
+    }
 	
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
@@ -105,6 +118,7 @@ public class DoodlePad extends JPanel {
 			}
 			curve.addLine(old, e.getPoint());
 			old = e.getPoint();
+			updatePos();
 			repaint();
 		}
 		
