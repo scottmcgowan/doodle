@@ -91,6 +91,7 @@ public class DoodlePad extends JPanel {
     	} if (toFall) {
     		man.fall();
     	}
+    	repaint();
     }
 	
 	public void paintComponent(Graphics g) {
@@ -118,8 +119,6 @@ public class DoodlePad extends JPanel {
 			}
 			curve.addLine(old, e.getPoint());
 			old = e.getPoint();
-			updatePos();
-			repaint();
 		}
 		
 		@Override
