@@ -15,11 +15,13 @@ import java.util.List;
 import javax.swing.JPanel;
 
 import model.CurvedLine;
+import model.StickMan;
 
 
 @SuppressWarnings("serial")
 public class MainPanel extends JPanel {
 	
+	StickMan man;
 	CurvedLine curve;
 	Point old;
 
@@ -31,6 +33,7 @@ public class MainPanel extends JPanel {
 		this.addMouseMotionListener(new MListener());
 		curve = new CurvedLine();
 		old = null;
+		man = new StickMan(100, 30);
 	}
 	
 	public void paintComponent(Graphics g) {
@@ -45,6 +48,8 @@ public class MainPanel extends JPanel {
 			g2d.setStroke(new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 			g2d.draw(l);
 		}
+		g2d.setColor(Color.DARK_GRAY);
+		g2d.fill(man);
 	}
 	
 	public class MListener extends MouseAdapter {
