@@ -11,7 +11,7 @@ public class GameMain {
 			public void run() {
 				JFrame game = new JFrame("Drawing Game!");
 				game.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-				game.setContentPane(new MainPanel());
+				game.setContentPane(new DoodlePad());
 				game.pack();
 				game.setResizable(false);
 				game.setLocationRelativeTo(null);

@@ -1,5 +1,6 @@
 package model;
 
+import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.geom.Rectangle2D;
 
@@ -7,6 +8,7 @@ import java.awt.geom.Rectangle2D;
 public class StickMan extends Rectangle2D.Double {
 
 	private Point location;
+	private Dimension size = new Dimension(30, 70);
 	
 	public StickMan(int x, int y) {
 		super(x, y, 30, 70);
@@ -18,6 +20,11 @@ public class StickMan extends Rectangle2D.Double {
 		location = p;
 	}
 	
+	public void fall() {
+		location.y += 3;
+		updateRect();
+	}
+	
 	public Point getLocation() {
 		return location;
 	}
@@ -25,5 +32,9 @@ public class StickMan extends Rectangle2D.Double {
 	public void setLocation(int x, int y) {
 		location.x = x;
 		location.y = y;
+	}
+	
+	public void updateRect() {
+		super.setFrame(location, size);
 	}
 }
