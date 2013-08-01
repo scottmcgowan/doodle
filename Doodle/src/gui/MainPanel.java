@@ -21,18 +21,19 @@ import org.jbox2d.dynamics.FixtureDef;
 import org.jbox2d.dynamics.World;
 
 import model.CurvedLine;
-
+import model.StickMan;
 
 @SuppressWarnings("serial")
 public class MainPanel extends JPanel {
 	
+	StickMan man;
 	CurvedLine curve;
 	Point old;
 	
 	public static final World world = new World(new Vec2(0.0f, -10.0f));
 	private static final int width = 500;
 	private static final int height = 500;
-
+	
 	public MainPanel() {
 		super();
 		this.setPreferredSize(new Dimension(500, 500));
@@ -41,9 +42,12 @@ public class MainPanel extends JPanel {
 		this.addMouseMotionListener(new MListener());
 		curve = new CurvedLine();
 		old = null;
+		
 		addGround(width, 10);
 		addWall(0, 0, 1, 500); //Left wall
         addWall(499, 0, 1, 500); //Right wall
+        
+		man = new StickMan(100, 30);
 	}
 	
 	//This method adds ground. 
@@ -88,6 +92,8 @@ public class MainPanel extends JPanel {
 			g2d.setStroke(new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 			g2d.draw(l);
 		}
+		g2d.setColor(Color.DARK_GRAY);
+		g2d.fill(man);
 	}
 	
 	public class MListener extends MouseAdapter {
