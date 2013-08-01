@@ -10,7 +10,7 @@ public class GameApp extends JApplet {
 	public void init() {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				setContentPane(new MainPanel());
+				setContentPane(new DoodlePad());
 				setSize(501, 501);
 			}
 		});

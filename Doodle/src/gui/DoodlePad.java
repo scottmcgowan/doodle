@@ -24,7 +24,7 @@ import model.CurvedLine;
 import model.StickMan;
 
 @SuppressWarnings("serial")
-public class MainPanel extends JPanel {
+public class DoodlePad extends JPanel {
 	
 	StickMan man;
 	CurvedLine curve;
@@ -34,7 +34,7 @@ public class MainPanel extends JPanel {
 	private static final int width = 500;
 	private static final int height = 500;
 	
-	public MainPanel() {
+	public DoodlePad() {
 		super();
 		this.setPreferredSize(new Dimension(500, 500));
 		this.setBackground(Color.WHITE);
