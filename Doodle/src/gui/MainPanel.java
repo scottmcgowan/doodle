@@ -1,8 +1,12 @@
 package gui;
 
+import java.awt.Point;
+
 import javax.swing.JPanel;
 
 import org.jbox2d.common.Vec2;
+import org.jbox2d.dynamics.Body;
+import org.jbox2d.dynamics.BodyType;
 import org.jbox2d.dynamics.World;
 
 @SuppressWarnings("serial")
@@ -48,10 +52,15 @@ public class MainPanel extends JPanel implements Runnable{
 			// Update World objects
 			world.step(timeStep, velocityIterations, positionIterations);
 			
+//			System.out.println(pad.playerPos().x + " " + pad.playerPos().y);
+			System.out.println(pad.getPlayerPos());
 			
 			// TODO: transition everything to World.step
-			pad.updatePos();
+//			pad.updatePos();
 			
+
+			
+			pad.repaint();
 			
 			// Delay timer to provide the necessary delay to meet the target
 			// rate
