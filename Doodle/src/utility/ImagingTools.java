@@ -36,7 +36,6 @@ public class ImagingTools {
 		} catch (FileNotFoundException e) {
 			System.err.println("Texture file could not be found");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);

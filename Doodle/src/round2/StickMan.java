@@ -71,4 +71,12 @@ public class StickMan {
 	public void applyLinearImpulse(Vec2 impulse, Vec2 point) {
 		body.applyLinearImpulse(impulse, point);
 	}
+
+	public void setLinearVelocity(Vec2 v) {
+		body.setLinearVelocity(v);
+	}
+
+	public Vec2 getLinearVelocity() {
+		return body.getLinearVelocity();
+	}
 }

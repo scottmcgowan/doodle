@@ -1,6 +1,5 @@
 package round2;
 
-
 import static org.lwjgl.opengl.GL11.*;
 
 import java.util.HashSet;
@@ -57,7 +56,7 @@ public class GameDemo {
 				float y = -0.5f * METER_SCALE;
 				float x2 = 0.25f * METER_SCALE;
 				float y2 = 0.5f * METER_SCALE;
-				
+
 				glBegin(GL_QUADS);
 				// glTexCoord2f(x, y);
 				glVertex2f(x, y);
@@ -71,7 +70,7 @@ public class GameDemo {
 				glPopMatrix();
 			}
 		}
-		
+
 		// StickMan
 		glPushMatrix();
 		Vec2 bodyPosition = man.getPosition().mul(METER_SCALE);
@@ -104,11 +103,16 @@ public class GameDemo {
 	private static void input() {
 		// Traverse
 		if (Keyboard.isKeyDown(Keyboard.KEY_A) && !Keyboard.isKeyDown(Keyboard.KEY_D)) {
-			moveState = MoveState.LEFT;
+			// moveState = MoveState.LEFT;
+			if (man.getLinearVelocity().x > -1.5)
+				man.applyLinearImpulse(new Vec2(-0.1f, 0), man.getPosition());
 		} else if (Keyboard.isKeyDown(Keyboard.KEY_D) && !Keyboard.isKeyDown(Keyboard.KEY_A)) {
-			moveState = MoveState.RIGHT;
+			// moveState = MoveState.RIGHT;
+			if (man.getLinearVelocity().x < 1.5f)
+				man.applyLinearImpulse(new Vec2(0.1f, 0), man.getPosition());
 		} else
-			moveState = MoveState.STOP;
+			// moveState = MoveState.STOP;
+			man.setLinearVelocity(new Vec2(0, man.getLinearVelocity().y));
 
 		// Jump
 		if (Keyboard.isKeyDown(Keyboard.KEY_W)) {
