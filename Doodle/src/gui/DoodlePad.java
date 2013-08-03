@@ -15,6 +15,7 @@ import java.util.List;
 import javax.swing.JPanel;
 
 import org.jbox2d.collision.shapes.PolygonShape;
+import org.jbox2d.collision.shapes.Shape;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.BodyDef;
 import org.jbox2d.dynamics.FixtureDef;
@@ -33,13 +34,17 @@ public class DoodlePad extends JPanel {
 	public static final World world = new World(new Vec2(0.0f, -10.0f));
 	private static final int width = 500;
 	private static final int height = 500;
+	private static final float timeStep = 1.0f / 60.0f;
+	int velocityIterations = 6;
+	int positionIterations = 2;
 	
 	public DoodlePad() {
 		super();
-		this.setPreferredSize(new Dimension(500, 500));
+		this.setPreferredSize(new Dimension(height, width));
 		this.setBackground(Color.WHITE);
 		this.addMouseListener(new MListener());
 		this.addMouseMotionListener(new MListener());
+		this.setDoubleBuffered(true);
 		curve = new CurvedLine();
 		old = null;
 		
@@ -47,7 +52,8 @@ public class DoodlePad extends JPanel {
 		addWall(0, 0, 1, 500); //Left wall
         addWall(499, 0, 1, 500); //Right wall
         
-		man = new StickMan(100, 30);
+		man = new StickMan(50, 100, world);
+//		setTimeStep(1.0f / 6.0f);
 	}
 	
 	//This method adds ground. 
@@ -59,7 +65,7 @@ public class DoodlePad extends JPanel {
         fd.shape = ps;
 
         BodyDef bd = new BodyDef();
-        bd.position= new Vec2(0.0f,-10f);
+        bd.position= new Vec2(0.0f, 10.0f);
 
         world.createBody(bd).createFixture(fd);
     }
@@ -79,18 +85,25 @@ public class DoodlePad extends JPanel {
         
         world.createBody(bd).createFixture(fd);
     }
+    
+    private void startTimeStep(float timeStep) {
+		// set time step
+		int velocityIterations = 6;
+		int positionIterations = 2;
+		
+		while (true) {
+			updatePos();
+			world.step(timeStep, velocityIterations, positionIterations);
+			Vec2 position = man.getPosition();
+			float angle = man.getAngle();
+			System.out.println(position.x + " " + position.y + " " + angle);
+		}
+	}
 
     // Updates object positions
     public void updatePos() {
-    	boolean toFall = true;
-    	List<Line2D.Double> lines = curve.getLine();
-    	for (Line2D.Double l: lines) {
-    		if (l.intersects(man)) {
-    			toFall = false;
-    		}
-    	} if (toFall) {
-    		man.fall();
-    	}
+    	world.step(timeStep, velocityIterations, positionIterations);
+    	man.updateRect();
     	repaint();
     }
 	
@@ -119,6 +132,15 @@ public class DoodlePad extends JPanel {
 			}
 			curve.addLine(old, e.getPoint());
 			old = e.getPoint();
+		}
+		
+		@Override
+		public void mousePressed(MouseEvent e) {
+			System.out.println("pressed");
+			startTimeStep(1.0f / 60.0f);
+			man.setPosition(new Vec2(e.getX(), e.getY()));
+//			Point p = e.getPoint();
+//			man.setPosition(new Vec2(p.x, p.y));
 		}
 		
 		@Override

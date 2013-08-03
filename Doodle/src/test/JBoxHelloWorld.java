@@ -12,9 +12,10 @@ import org.jbox2d.dynamics.BodyType;
 import org.jbox2d.dynamics.FixtureDef;
 import org.jbox2d.dynamics.World;
 
+
 @SuppressWarnings("serial")
 public class JBoxHelloWorld extends JPanel {
-
+	
 	Vec2 vec;
 	World world;
 	BodyDef groundBodyDef;
@@ -27,12 +28,17 @@ public class JBoxHelloWorld extends JPanel {
 	
 	public JBoxHelloWorld() {
 		super();
-		this.setPreferredSize(new Dimension(500, 500));
-		
+		setPreferredSize(new Dimension(500, 500));
 		// Create world
 		vec = new Vec2(0.0f, -10.0f);
 		world = new World(vec);
-		
+		world.setAllowSleep(true);
+		createGround();
+		createBody(0.0f, 4.0f, BodyType.DYNAMIC);
+		setTimeStep(1.0f / 60.0f);
+	}
+	
+	private void createGround() {
 		// Create ground
 		groundBodyDef = new BodyDef();
 		groundBodyDef.position.set(0.0f, -10.0f);
@@ -40,11 +46,13 @@ public class JBoxHelloWorld extends JPanel {
 		groundBox = new PolygonShape();
 		groundBox.setAsBox(50.0f, 10.0f);
 		groundBody.createFixture(groundBox, 0.0f);
-		
+	}
+	
+	private void createBody(float x, float y, BodyType type) {
 		// Create dynamic body
 		BodyDef bodyDef = new BodyDef();
-		bodyDef.type = BodyType.DYNAMIC;
-		bodyDef.position.set(0.0f, 4.0f);
+		bodyDef.type = type;
+		bodyDef.position.set(x, y);
 		body = world.createBody(bodyDef);
 		
 		// attach shape to body
@@ -57,10 +65,10 @@ public class JBoxHelloWorld extends JPanel {
 		fixtureDef.density = 1.0f;
 		fixtureDef.friction = 0.3f;
 		body.createFixture(fixtureDef);
-		
+	}
+	
+	private void setTimeStep(float timeStep) {
 		// set time step
-		float timeStep = 1.0f / 60.0f;
-		
 		int velocityIterations = 6;
 		int positionIterations = 2;
 		

@@ -3,6 +3,8 @@ package gui;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
+import test.JBoxHelloWorld;
+
 public class GameMain {
 
 	
@@ -11,7 +13,7 @@ public class GameMain {
 			public void run() {
 				JFrame game = new JFrame("Drawing Game!");
 				game.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-				game.setContentPane(new MainPanel());
+				game.setContentPane(new JBoxHelloWorld());
 				game.pack();
 				game.setResizable(false);
 				game.setLocationRelativeTo(null);
