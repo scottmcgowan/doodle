@@ -1,13 +1,6 @@
 package round2;
 
-import static org.lwjgl.opengl.GL11.GL_QUADS;
-import static org.lwjgl.opengl.GL11.glBegin;
-import static org.lwjgl.opengl.GL11.glEnd;
-import static org.lwjgl.opengl.GL11.glPopMatrix;
-import static org.lwjgl.opengl.GL11.glPushMatrix;
-import static org.lwjgl.opengl.GL11.glRotated;
-import static org.lwjgl.opengl.GL11.glTranslatef;
-import static org.lwjgl.opengl.GL11.glVertex2f;
+import static org.lwjgl.opengl.GL11.*;
 
 import org.jbox2d.collision.shapes.PolygonShape;
 import org.jbox2d.common.Vec2;
@@ -58,7 +51,7 @@ public class StickMan {
 	}
 
 	public void draw() {
-//		System.out.println("Man: " + body.getPosition());
+		// System.out.println("Man: " + body.getPosition());
 		// StickMan
 		glPushMatrix();
 		Vec2 bodyPosition = body.getPosition().mul(GameDemo.METER_SCALE);
@@ -70,6 +63,7 @@ public class StickMan {
 		float x2 = hx * GameDemo.METER_SCALE;
 		float y2 = hy * GameDemo.METER_SCALE;
 
+		glColor3f(1, 1, 1);
 		glBegin(GL_QUADS);
 		// glTexCoord2f(x, y);
 		glVertex2f(x, y);
@@ -101,7 +95,7 @@ public class StickMan {
 			break;
 		}
 	}
-	
+
 	public Vec2 getPosition() {
 		return body.getPosition();
 	}
