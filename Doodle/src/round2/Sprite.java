@@ -1,6 +1,10 @@
 package round2;
 
-
+/**
+ * 
+ * @author Oskar Veezhoek
+ *
+ */
 public final class Sprite {
 
 	private final String name;

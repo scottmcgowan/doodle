@@ -1,5 +1,6 @@
 package round2;
 
+import static org.lwjgl.opengl.ARBTextureRectangle.GL_TEXTURE_RECTANGLE_ARB;
 import static org.lwjgl.opengl.GL11.*;
 
 import java.util.HashSet;
@@ -81,17 +82,17 @@ public class GameDemo {
 	private static void input() {
 		// Traverse
 		if (Keyboard.isKeyDown(Keyboard.KEY_A) && !Keyboard.isKeyDown(Keyboard.KEY_D)) {
-			man.move("left");
+			man.move("left", numFootContacts);
 		} else if (Keyboard.isKeyDown(Keyboard.KEY_D) && !Keyboard.isKeyDown(Keyboard.KEY_A)) {
-			man.move("right");
+			man.move("right", numFootContacts);
 		} else
-			man.move("stop");
+			man.move("stop", numFootContacts);
 
 		// Jump
 		if (Keyboard.isKeyDown(Keyboard.KEY_W)) {
 			if (numFootContacts >= 1 && jumpWait == 0) {
 				jumpWait = 2;
-				man.move("jump");
+				man.move("jump", numFootContacts);
 			}
 		}
 		if (Keyboard.isKeyDown(Keyboard.KEY_P)) {
@@ -117,6 +118,12 @@ public class GameDemo {
 		glMatrixMode(GL_MODELVIEW);
 	}
 
+	private static void setUpStates() {
+		glEnable(GL_TEXTURE_RECTANGLE_ARB);
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
+	}
+	
 	private static void setUpObjects() {
 		numFootContacts = 0;
 		jumpWait = 0;
@@ -218,8 +225,10 @@ public class GameDemo {
 	public static void main(String[] args) {
 		setUpDisplay();
 		setUpObjects();
+		setUpStates();
 		setUpMatrices();
 		enterGameLoop();
 		cleanUp(false);
 	}
+
 }
