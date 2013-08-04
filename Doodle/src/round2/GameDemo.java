@@ -92,9 +92,13 @@ public class GameDemo {
 				man.move("jump");
 			}
 		}
+		if (Keyboard.isKeyDown(Keyboard.KEY_P)) {
+			System.out.println(man.getPosition());
+		}
 
 		// Draw lines
 		if (Mouse.isButtonDown(0)) {
+			System.out.println(new Vec2(Mouse.getX(), Mouse.getY()).mul(1.0f / METER_SCALE).mul(1 / 3f));
 			lines.addVertex(new Vec2(Mouse.getX(), Mouse.getY()).mul(1.0f / METER_SCALE).mul(1 / 3f));
 		} else
 			lines.stop();

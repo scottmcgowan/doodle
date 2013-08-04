@@ -101,4 +101,8 @@ public class StickMan {
 			break;
 		}
 	}
+	
+	public Vec2 getPosition() {
+		return body.getPosition();
+	}
 }
