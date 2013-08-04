@@ -140,9 +140,9 @@ public class Doodle {
 		}
 
 		// Draw lines
-		if (Mouse.isButtonDown(0)) {
+		if (Mouse.isButtonDown(0) && !Mouse.isButtonDown(1)) {
 			lines.addVertex(new Vec2(Mouse.getX(), Mouse.getY()).mul(1.0f / METER_SCALE).mul(1 / 3f));
-		} else if (Mouse.isButtonDown(1)) {
+		} else if (Mouse.isButtonDown(1) && !Mouse.isButtonDown(0)) {
 			erase = true;
 		} else {
 			lines.stop();
