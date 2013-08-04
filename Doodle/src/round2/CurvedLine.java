@@ -96,21 +96,23 @@ public class CurvedLine {
 	public void stop() {
 		prev = null;
 	}
-	
+
 	public void fixtureToRemove(Fixture fixture) {
 		toRemove.add(fixture);
 	}
-	
+
 	public void removeFixtures() {
 		for (int i = 0; i < toRemove.size(); i++) {
 			Fixture f = toRemove.remove(i);
 			Body body = f.getBody();
 			System.out.println(body + ", " + f);
-			body.destroyFixture(f);
-			System.out.println("Fixtures: " + body.m_fixtureCount);
-			if (body.m_fixtureCount <= 0) {
-				bodies.remove(body);
-				world.destroyBody(body);
+			if (body != null) { // TEMPORARY FIX, FIGURE OUT BUG!!!
+				body.destroyFixture(f);
+				System.out.println("Fixtures: " + body.m_fixtureCount);
+				if (body.m_fixtureCount <= 0) {
+					bodies.remove(body);
+					world.destroyBody(body);
+				}
 			}
 			System.out.println("Bodies: " + bodies.size());
 		}
