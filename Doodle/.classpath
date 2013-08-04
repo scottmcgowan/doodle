@@ -3,7 +3,15 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="images"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/jbox2d-library"/>
-	<classpathentry kind="lib" path="/jbox2d-library/target/jbox2d-library-2.2.1.1-javadoc.jar"/>
+	<classpathentry kind="lib" path="lib/jars/jbox2d-library-2.2.1.1.jar"/>
+	<classpathentry kind="lib" path="lib/jars/jdom-2.0.5.jar"/>
+	<classpathentry kind="lib" path="lib/jars/lwjgl_util.jar"/>
+	<classpathentry kind="lib" path="lib/jars/lwjgl.jar">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Doodle/lib/native/all"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="lib/jars/PNGDecoder.jar"/>
+	<classpathentry kind="lib" path="lib/jars/slick-util.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

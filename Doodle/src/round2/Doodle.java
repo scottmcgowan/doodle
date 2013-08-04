@@ -245,7 +245,6 @@ public class Doodle {
 		public void beginContact(Contact contact) {
 			Object dataA = contact.getFixtureA().getUserData();
 			Object dataB = contact.getFixtureB().getUserData();
-			System.out.println(dataA + "   " + dataB);
 			if (dataA.equals("eraser") || dataB.equals("eraser")) {
 				if (dataA.equals("line") && erase)
 					lines.fixtureToRemove(contact.getFixtureA());

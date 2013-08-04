@@ -184,7 +184,7 @@ public class DoodlePad extends JPanel {
     			toFall = false;
     		}
     	} if (toFall) {
-    		man.fall();
+//    		man.fall();
     	}
     	repaint();
     }
