@@ -29,7 +29,7 @@ public class GameDemo {
 	private static final String WINDOW_TITLE = "JBox Demo!";
 	private static final int[] WINDOW_DIMENSIONS = { 960, 720 };
 
-	public static final int METER_SCALE = 32; // 64 pixels = 1 meter?
+	public static final float METER_SCALE = 32.0f; // 64 pixels = 1 meter?
 
 	private static World world = new World(new Vec2(0.0f, -9.8f));
 	private static Set<Body> bodies = new HashSet<Body>();
@@ -66,15 +66,7 @@ public class GameDemo {
 				glPopMatrix();
 			}
 		}
-		 lines.draw();
-//		for (int i = 0; i < 5; i++) {
-//			System.out.println("Point: " + (5) + ", " + ((i+1) * 10));
-//			glBegin(GL_LINES);
-//			// glVertex2f(0, 0);
-//			glVertex2f(5, i * 10);
-//			glVertex2f(15, (i + 1) * 10);
-//			glEnd();
-//		}
+		lines.draw();
 		man.draw();
 	}
 
@@ -103,7 +95,7 @@ public class GameDemo {
 
 		// Draw lines
 		if (Mouse.isButtonDown(0)) {
-			lines.addVertex(new Vec2(Mouse.getX(), Mouse.getY()));
+			lines.addVertex(new Vec2(Mouse.getX(), Mouse.getY()).mul(1.0f / METER_SCALE).mul(1 / 3f));
 		} else
 			lines.stop();
 	}
@@ -123,8 +115,8 @@ public class GameDemo {
 		numFootContacts = 0;
 		jumpWait = 0;
 
-		man = new StickMan(world, 0.25f, 0.5f, METER_SCALE);
-		lines = new CurvedLine();
+		man = new StickMan(world, 0.25f, 0.5f);
+		lines = new CurvedLine(world);
 
 		BodyDef groundDef = new BodyDef();
 		groundDef.position.set(0, 0);
@@ -187,8 +179,6 @@ public class GameDemo {
 
 		@Override
 		public void beginContact(Contact contact) {
-			// System.out.println(contact.getFixtureA().getUserData() + ", " +
-			// contact.getFixtureB().getUserData());
 			Object fixtureUserData = contact.getFixtureA().getUserData();
 			if (fixtureUserData.equals("foot")) {
 				numFootContacts++;

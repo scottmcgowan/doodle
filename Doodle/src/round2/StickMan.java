@@ -21,14 +21,12 @@ import org.jbox2d.dynamics.World;
 public class StickMan {
 
 	private static Body body;
-	private int scale;
 	private float hx, hy;
 
-	public StickMan(World world, float hx, float hy, int scale) {
+	public StickMan(World world, float hx, float hy) {
 		this.hx = hx;
 		this.hy = hy;
-		this.scale = scale;
-		
+
 		// Body def
 		BodyDef manDef = new BodyDef();
 		manDef.type = BodyType.DYNAMIC;
@@ -58,30 +56,31 @@ public class StickMan {
 		Fixture footSensorFixture = body.createFixture(manFixtureDef);
 		footSensorFixture.setUserData("foot");
 	}
-	
+
 	public void draw() {
+//		System.out.println("Man: " + body.getPosition());
 		// StickMan
-				glPushMatrix();
-				Vec2 bodyPosition = body.getPosition().mul(scale);
-				glTranslatef(bodyPosition.x, bodyPosition.y, 0);
-				glRotated(Math.toDegrees(body.getAngle()), 0, 0, 1);
+		glPushMatrix();
+		Vec2 bodyPosition = body.getPosition().mul(GameDemo.METER_SCALE);
+		glTranslatef(bodyPosition.x, bodyPosition.y, 0);
+		glRotated(Math.toDegrees(body.getAngle()), 0, 0, 1);
 
-				float x = -hx * scale;
-				float y = -hy * scale;
-				float x2 = hx * scale;
-				float y2 = hy * scale;
+		float x = -hx * GameDemo.METER_SCALE;
+		float y = -hy * GameDemo.METER_SCALE;
+		float x2 = hx * GameDemo.METER_SCALE;
+		float y2 = hy * GameDemo.METER_SCALE;
 
-				glBegin(GL_QUADS);
-				// glTexCoord2f(x, y);
-				glVertex2f(x, y);
-				// glTexCoord2f(x, y2);
-				glVertex2f(x2, y);
-				// glTexCoord2f(x2, y2);
-				glVertex2f(x2, y2);
-				// glTexCoord2f(x2, y);
-				glVertex2f(x, y2);
-				glEnd();
-				glPopMatrix();
+		glBegin(GL_QUADS);
+		// glTexCoord2f(x, y);
+		glVertex2f(x, y);
+		// glTexCoord2f(x, y2);
+		glVertex2f(x2, y);
+		// glTexCoord2f(x2, y2);
+		glVertex2f(x2, y2);
+		// glTexCoord2f(x2, y);
+		glVertex2f(x, y2);
+		glEnd();
+		glPopMatrix();
 	}
 
 	public void move(String direction) {
