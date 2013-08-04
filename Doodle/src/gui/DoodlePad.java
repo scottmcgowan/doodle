@@ -10,19 +10,28 @@ import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Line2D;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
+import javax.imageio.ImageIO;
 import javax.swing.JPanel;
+import javax.swing.text.html.ImageView;
 
+import org.jbox2d.collision.shapes.CircleShape;
 import org.jbox2d.collision.shapes.PolygonShape;
-import org.jbox2d.collision.shapes.Shape;
 import org.jbox2d.common.Vec2;
+import org.jbox2d.dynamics.Body;
 import org.jbox2d.dynamics.BodyDef;
+import org.jbox2d.dynamics.BodyType;
 import org.jbox2d.dynamics.FixtureDef;
 import org.jbox2d.dynamics.World;
 
 import model.CurvedLine;
+import model.Player;
 import model.StickMan;
+import model.Utils;
 
 @SuppressWarnings("serial")
 public class DoodlePad extends JPanel {
@@ -31,30 +40,110 @@ public class DoodlePad extends JPanel {
 	CurvedLine curve;
 	Point old;
 	
-	public static final World world = new World(new Vec2(0.0f, -10.0f));
+	private Body player;
+	
+	private static World world;
+	
 	private static final int width = 500;
 	private static final int height = 500;
-	private static final float timeStep = 1.0f / 60.0f;
-	int velocityIterations = 6;
-	int positionIterations = 2;
+
 	
-	public DoodlePad() {
+	
+	/*
+	 * TODO:
+	 * JBox2D engine uses meters for all calculations,
+	 * but we use pixels for drawing.  All game logic should 
+	 * be calculated in meters, and then converted to px for
+	 * drawing to the screen.  This will require efficient
+	 * decoupling of the model (game logic) and view (gui).
+	 * 
+	 * This also requires that a scale be developed to convert
+	 * px <--> m ... 50px == 1m seems like a safe place to
+	 * start, which would make a human character ~89px high.
+	 */
+	
+	/*
+	 * TODO:
+	 * All kinds of stuff is messed up.  Whoops.
+	 */
+	
+	/*
+	 * TODO:
+	 * GRAVITY IS BACKWARDS?!
+	 */
+	
+	
+	
+	public DoodlePad (World world) {
 		super();
-		this.setPreferredSize(new Dimension(height, width));
+		this.setPreferredSize(new Dimension(500, 500));
 		this.setBackground(Color.WHITE);
 		this.addMouseListener(new MListener());
 		this.addMouseMotionListener(new MListener());
-		this.setDoubleBuffered(true);
+		DoodlePad.world = world;
 		curve = new CurvedLine();
 		old = null;
 		
-		addGround(width, 10);
-		addWall(0, 0, 1, 500); //Left wall
-        addWall(499, 0, 1, 500); //Right wall
+		addGround(100, 10);
+		addWall(0, 0, 1, 100); //Left wall
+        addWall(100, 0, 1, 100); //Right wall
         
-		man = new StickMan(50, 100, world);
-//		setTimeStep(1.0f / 6.0f);
+       buildPlayer();
+        
+//		man = new StickMan(100, 30);
 	}
+	
+	
+	private BufferedImage playerImg;
+	// This method creates the player object
+	// TODO: Move this to a Player class?
+	public void buildPlayer() {
+
+		//body definition
+		BodyDef bd = new BodyDef();
+		bd.position.set(1, 30);  // 1m right, 30m up!
+		bd.type = BodyType.DYNAMIC;
+		 
+		//define shape of the body.
+		CircleShape cs = new CircleShape();
+		cs.m_radius = 0.5f;  
+		 
+		//define fixture of the body.
+		FixtureDef fd = new FixtureDef();
+		fd.shape = cs;
+		fd.density = 0.5f;
+		fd.friction = 0.3f;        
+		fd.restitution = 0.5f;
+		 
+		//create the body and add fixture to it
+		player =  world.createBody(bd);
+		player.createFixture(fd);
+		
+		try {
+			playerImg = ImageIO.read(new File("images/heart.png"));
+		} catch (IOException e) {
+			System.out.println("Player image not found");
+		}
+	
+		
+	}
+	
+	public Vec2 getPlayerPos() {
+		return player.getPosition();
+	}
+	
+	public Point getPlayerPosInt() {
+		
+		Float x = Utils.toPixelPosX(player.getPosition().x);
+		Float y = Utils.toPixelPosY(player.getPosition().y);
+		
+		int x2 = Math.round(x);
+		int y2 = Math.round(y);
+		Point pos = new Point(x2, y2);
+		
+		return pos;
+	}
+	
 	
 	//This method adds ground. 
     public static void addGround(float width, float height){
@@ -65,7 +154,7 @@ public class DoodlePad extends JPanel {
         fd.shape = ps;
 
         BodyDef bd = new BodyDef();
-        bd.position= new Vec2(0.0f, 10.0f);
+        bd.position= new Vec2(0.0f,-10f);
 
         world.createBody(bd).createFixture(fd);
     }
@@ -85,25 +174,18 @@ public class DoodlePad extends JPanel {
         
         world.createBody(bd).createFixture(fd);
     }
-    
-    private void startTimeStep(float timeStep) {
-		// set time step
-		int velocityIterations = 6;
-		int positionIterations = 2;
-		
-		while (true) {
-			updatePos();
-			world.step(timeStep, velocityIterations, positionIterations);
-			Vec2 position = man.getPosition();
-			float angle = man.getAngle();
-			System.out.println(position.x + " " + position.y + " " + angle);
-		}
-	}
 
     // Updates object positions
     public void updatePos() {
-    	world.step(timeStep, velocityIterations, positionIterations);
-    	man.updateRect();
+    	boolean toFall = true;
+    	List<Line2D.Double> lines = curve.getLine();
+    	for (Line2D.Double l: lines) {
+    		if (l.intersects(man)) {
+    			toFall = false;
+    		}
+    	} if (toFall) {
+    		man.fall();
+    	}
     	repaint();
     }
 	
@@ -119,8 +201,20 @@ public class DoodlePad extends JPanel {
 			g2d.setStroke(new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 			g2d.draw(l);
 		}
-		g2d.setColor(Color.DARK_GRAY);
-		g2d.fill(man);
+		
+		
+		g2d.drawImage(playerImg, getPlayerPosInt().x, getPlayerPosInt().y, 30, 30, this);
+		g2d.drawImage(playerImg, 50, 120, 30, 30, this);
+		
+		
+		// WHERRE AM I?!
+		// Debug prints for spacing
+		g2d.drawString("50px abs",50, 10);
+		g2d.drawString("50px", Utils.toPosX(50), 30);
+		g2d.drawString("5m", Utils.toPixelPosX(250), 50);
+		
+//		g2d.setColor(Color.DARK_GRAY);
+//		g2d.fill(man);
 	}
 	
 	public class MListener extends MouseAdapter {
@@ -132,15 +226,6 @@ public class DoodlePad extends JPanel {
 			}
 			curve.addLine(old, e.getPoint());
 			old = e.getPoint();
-		}
-		
-		@Override
-		public void mousePressed(MouseEvent e) {
-			System.out.println("pressed");
-			startTimeStep(1.0f / 60.0f);
-			man.setPosition(new Vec2(e.getX(), e.getY()));
-//			Point p = e.getPoint();
-//			man.setPosition(new Vec2(p.x, p.y));
 		}
 		
 		@Override

@@ -1,19 +1,30 @@
 package gui;
 
+import java.awt.Point;
+
 import javax.swing.JPanel;
 
+import org.jbox2d.common.Vec2;
+import org.jbox2d.dynamics.Body;
+import org.jbox2d.dynamics.BodyType;
+import org.jbox2d.dynamics.World;
+
 @SuppressWarnings("serial")
-public class MainPanel extends JPanel implements Runnable {
+public class MainPanel extends JPanel implements Runnable{
 
 	private static int UPDATE_RATE = 60; // number of game updates per second
 	private static long UPDATE_PERIOD = 1000000000L / UPDATE_RATE; // nanoseconds
+	
+	public static final World world = new World(new Vec2(0.0f, -10.0f));
 
+	
 	private DoodlePad pad;
 	private volatile Thread thread;
 
 	public MainPanel() {
 		super();
-		pad = new DoodlePad();
+		world.setAllowSleep(true);
+		pad = new DoodlePad(world);
 		this.add(pad);
 		thread = new Thread(this);
 		thread.start();
@@ -21,29 +32,49 @@ public class MainPanel extends JPanel implements Runnable {
 
 	@Override
 	public void run() {
-		// Regenerate the game objects for a new game
+		
+		// How much to advance the simulation each second
+		// 60 frames of advancement per second
+		float timeStep = 1.0f / 60.f;
+		
+		// Accuracy of velocity simulations, higher = better
+		int velocityIterations = 6;
+		
+		// Accuracy of position simulations, higher = better
+		int positionIterations = 3;
 
-		// Game loop
+		// For frame timer
 		long beginTime, timeTaken, timeLeft;
-
 		beginTime = System.nanoTime();
-
+		
+		// Game loop
 		while (true) {
-			// Refresh the display
-			pad.updatePos();
+			// Update World objects
+			world.step(timeStep, velocityIterations, positionIterations);
+			
+//			System.out.println(pad.playerPos().x + " " + pad.playerPos().y);
+			System.out.println(pad.getPlayerPos());
+			
+			// TODO: transition everything to World.step
+//			pad.updatePos();
+			
 
+			
+			pad.repaint();
+			
 			// Delay timer to provide the necessary delay to meet the target
 			// rate
 			timeTaken = System.nanoTime() - beginTime;
 			timeLeft = (UPDATE_PERIOD - timeTaken) / 1000000; // in milliseconds
-			if (timeLeft > 0) {
-				try {
-					// Provides the necessary delay and also yields control so
-					// that other thread can do work.
-					Thread.sleep(timeLeft);
-				} catch (InterruptedException ex) {}
+			if (timeLeft < 10)
+				timeLeft = 10; // set a minimum
+			try {
+				// Provides the necessary delay and also yields control so that
+				// other thread can do work.
+				Thread.sleep(timeLeft);
+			} catch (InterruptedException ex) {
 			}
-
+			
 			beginTime = System.nanoTime();
 		}
 	}
