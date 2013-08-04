@@ -7,11 +7,11 @@ import java.util.Set;
 
 import org.jbox2d.callbacks.ContactImpulse;
 import org.jbox2d.callbacks.ContactListener;
+import org.jbox2d.collision.shapes.EdgeShape;
 import org.jbox2d.collision.shapes.PolygonShape;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.*;
 import org.jbox2d.dynamics.contacts.Contact;
-import org.jbox2d.dynamics.contacts.ContactEdge;
 
 import org.jbox2d.collision.*;
 import org.lwjgl.*;
@@ -32,20 +32,16 @@ public class GameDemo {
 	public static final int METER_SCALE = 32; // 64 pixels = 1 meter?
 
 	private static World world = new World(new Vec2(0.0f, -9.8f));
-	private static Set<Body> lines = new HashSet<Body>();
+	private static Set<Body> bodies = new HashSet<Body>();
 	private static Body ground;
 	private static StickMan man;
+	private static CurvedLine lines;
 	private static int numFootContacts;
-	private static int jumpTimeout;
-	private static MoveState moveState;
-
-	public enum MoveState {
-		STOP, LEFT, RIGHT;
-	}
+	static int jumpWait;
 
 	private static void render() {
 		glClear(GL_COLOR_BUFFER_BIT);
-		for (Body body : lines) {
+		for (Body body : bodies) {
 			if (body.getType() == BodyType.DYNAMIC) {
 				glPushMatrix();
 				Vec2 bodyPosition = body.getPosition().mul(METER_SCALE);
@@ -70,57 +66,46 @@ public class GameDemo {
 				glPopMatrix();
 			}
 		}
-
-		// StickMan
-		glPushMatrix();
-		Vec2 bodyPosition = man.getPosition().mul(METER_SCALE);
-		glTranslatef(bodyPosition.x, bodyPosition.y, 0);
-		glRotated(Math.toDegrees(man.getAngle()), 0, 0, 1);
-
-		float x = -0.25f * METER_SCALE;
-		float y = -0.5f * METER_SCALE;
-		float x2 = 0.25f * METER_SCALE;
-		float y2 = 0.5f * METER_SCALE;
-
-		glBegin(GL_QUADS);
-		// glTexCoord2f(x, y);
-		glVertex2f(x, y);
-		// glTexCoord2f(x, y2);
-		glVertex2f(x2, y);
-		// glTexCoord2f(x2, y2);
-		glVertex2f(x2, y2);
-		// glTexCoord2f(x2, y);
-		glVertex2f(x, y2);
-		glEnd();
-		glPopMatrix();
+		 lines.draw();
+//		for (int i = 0; i < 5; i++) {
+//			System.out.println("Point: " + (5) + ", " + ((i+1) * 10));
+//			glBegin(GL_LINES);
+//			// glVertex2f(0, 0);
+//			glVertex2f(5, i * 10);
+//			glVertex2f(15, (i + 1) * 10);
+//			glEnd();
+//		}
+		man.draw();
 	}
 
 	private static void logic() {
 		world.step(1 / 60f, 8, 3);
-		man.move(moveState);
+		if (jumpWait > 0)
+			jumpWait--;
 	}
 
 	private static void input() {
 		// Traverse
 		if (Keyboard.isKeyDown(Keyboard.KEY_A) && !Keyboard.isKeyDown(Keyboard.KEY_D)) {
-			// moveState = MoveState.LEFT;
-			if (man.getLinearVelocity().x > -1.5)
-				man.applyLinearImpulse(new Vec2(-0.1f, 0), man.getPosition());
+			man.move("left");
 		} else if (Keyboard.isKeyDown(Keyboard.KEY_D) && !Keyboard.isKeyDown(Keyboard.KEY_A)) {
-			// moveState = MoveState.RIGHT;
-			if (man.getLinearVelocity().x < 1.5f)
-				man.applyLinearImpulse(new Vec2(0.1f, 0), man.getPosition());
+			man.move("right");
 		} else
-			// moveState = MoveState.STOP;
-			man.setLinearVelocity(new Vec2(0, man.getLinearVelocity().y));
+			man.move("stop");
 
 		// Jump
 		if (Keyboard.isKeyDown(Keyboard.KEY_W)) {
-			if (numFootContacts >= 1 && jumpTimeout <= 0) {
-				man.applyLinearImpulse(new Vec2(0, 0.085f), man.getPosition());
+			if (numFootContacts >= 1 && jumpWait == 0) {
+				jumpWait = 2;
+				man.move("jump");
 			}
 		}
-		System.out.println(numFootContacts >= 1);
+
+		// Draw lines
+		if (Mouse.isButtonDown(0)) {
+			lines.addVertex(new Vec2(Mouse.getX(), Mouse.getY()));
+		} else
+			lines.stop();
 	}
 
 	private static void cleanUp(boolean asCrash) {
@@ -135,10 +120,11 @@ public class GameDemo {
 	}
 
 	private static void setUpObjects() {
-		moveState = MoveState.STOP;
 		numFootContacts = 0;
+		jumpWait = 0;
 
-		man = new StickMan(world);
+		man = new StickMan(world, 0.25f, 0.5f, METER_SCALE);
+		lines = new CurvedLine();
 
 		BodyDef groundDef = new BodyDef();
 		groundDef.position.set(0, 0);
@@ -152,7 +138,7 @@ public class GameDemo {
 		groundFixtureDef.friction = 0.01f;
 		Fixture groundFixture = ground.createFixture(groundFixtureDef);
 		groundFixture.setUserData("ground");
-		lines.add(ground);
+		bodies.add(ground);
 
 		BodyDef boxDef = new BodyDef();
 		boxDef.position.set(320 / METER_SCALE / 2 + 1, 240 / METER_SCALE / 2 + 1);
@@ -166,7 +152,7 @@ public class GameDemo {
 		boxFixtureDef.friction = 6f;
 		Fixture boxFixture = box.createFixture(boxFixtureDef);
 		boxFixture.setUserData("box");
-		lines.add(box);
+		bodies.add(box);
 
 		// World
 		world.setContactListener(new MyContactListener());
