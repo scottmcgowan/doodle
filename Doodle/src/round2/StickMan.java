@@ -56,10 +56,10 @@ public class StickMan {
 		FixtureDef manFixtureDef = new FixtureDef();
 		manFixtureDef.density = 0.1f;
 		manFixtureDef.shape = manShape;
-		manFixtureDef.friction = 0;
+		manFixtureDef.friction = 0.001f;
 
 		// create body
-		manDef.position.set(320 / GameDemo.METER_SCALE / 2, 240 / GameDemo.METER_SCALE / 2);
+		manDef.position.set(320 / Doodle.METER_SCALE / 2, 240 / Doodle.METER_SCALE / 2);
 		body = world.createBody(manDef);
 
 		// add main fixture
@@ -99,14 +99,14 @@ public class StickMan {
 		// System.out.println("Man: " + body.getPosition());
 		// StickMan
 		glPushMatrix();
-		Vec2 bodyPosition = body.getPosition().mul(GameDemo.METER_SCALE);
+		Vec2 bodyPosition = body.getPosition().mul(Doodle.METER_SCALE);
 		glTranslatef(bodyPosition.x, bodyPosition.y, 0);
 		glRotated(Math.toDegrees(body.getAngle()), 0, 0, 1);
 
-		float x = -hx * GameDemo.METER_SCALE;
-		float y = -hy * GameDemo.METER_SCALE;
-		float x2 = hx * GameDemo.METER_SCALE;
-		float y2 = hy * GameDemo.METER_SCALE;
+		float x = -hx * Doodle.METER_SCALE;
+		float y = -hy * Doodle.METER_SCALE;
+		float x2 = hx * Doodle.METER_SCALE;
+		float y2 = hy * Doodle.METER_SCALE;
 
 		glColor3f(1, 1, 1);
 		glBindTexture(GL_TEXTURE_RECTANGLE_ARB, spritesheet);

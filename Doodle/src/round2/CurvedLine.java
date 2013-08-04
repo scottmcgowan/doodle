@@ -1,10 +1,16 @@
 package round2;
 
-import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL11.GL_LINES;
+import static org.lwjgl.opengl.GL11.GL_LINE_LOOP;
+import static org.lwjgl.opengl.GL11.glBegin;
+import static org.lwjgl.opengl.GL11.glColor3f;
+import static org.lwjgl.opengl.GL11.glEnd;
+import static org.lwjgl.opengl.GL11.glVertex2f;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jbox2d.collision.shapes.CircleShape;
 import org.jbox2d.collision.shapes.EdgeShape;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.Body;
@@ -19,11 +25,33 @@ public class CurvedLine {
 	private Vec2 prev;
 	private World world;
 	private List<Body> bodies;
+	private List<Fixture> toRemove;
+	public Body eraser;
 
 	public CurvedLine(World world) {
 		prev = null;
 		this.world = world;
 		bodies = new ArrayList<Body>();
+		toRemove = new ArrayList<Fixture>();
+
+		// Eraser setup
+		BodyDef eraserDef = new BodyDef();
+		eraserDef.type = BodyType.DYNAMIC;
+		eraserDef.position.set(5, 4);
+		eraser = world.createBody(eraserDef);
+
+		// Eraser shape
+		CircleShape eraserShape = new CircleShape();
+		eraserShape.setRadius(0.3f);
+
+		// Fixture
+		FixtureDef eraserFixtureDef = new FixtureDef();
+		eraserFixtureDef.shape = eraserShape;
+		eraserFixtureDef.density = 1f;
+		eraserFixtureDef.isSensor = true;
+		Fixture eraserFixture = eraser.createFixture(eraserFixtureDef);
+		eraserFixture.setUserData("eraser");
+
 	}
 
 	public void addVertex(Vec2 vec) {
@@ -42,14 +70,13 @@ public class CurvedLine {
 			// Shape def
 			EdgeShape lineShape = new EdgeShape();
 			vec = vec.sub(body.getPosition());
-			System.out.println(vec);
 			lineShape.set(prev, vec);
 
 			// Fixture def
 			FixtureDef manFixtureDef = new FixtureDef();
 			manFixtureDef.density = 1.0f;
 			manFixtureDef.shape = lineShape;
-			manFixtureDef.friction = 0;
+			manFixtureDef.friction = 1.0f;
 
 			// add main fixture
 			Fixture manFixture = body.createFixture(manFixtureDef);
@@ -58,8 +85,35 @@ public class CurvedLine {
 		}
 	}
 
+	public List<Body> getLines() {
+		return bodies;
+	}
+
+	public void setLines(List<Body> bodies) {
+		this.bodies = bodies;
+	}
+
 	public void stop() {
 		prev = null;
+	}
+	
+	public void fixtureToRemove(Fixture fixture) {
+		toRemove.add(fixture);
+	}
+	
+	public void removeFixtures() {
+		for (int i = 0; i < toRemove.size(); i++) {
+			Fixture f = toRemove.remove(i);
+			Body body = f.getBody();
+			System.out.println(body + ", " + f);
+			body.destroyFixture(f);
+			System.out.println("Fixtures: " + body.m_fixtureCount);
+			if (body.m_fixtureCount <= 0) {
+				bodies.remove(body);
+				world.destroyBody(body);
+			}
+			System.out.println("Bodies: " + bodies.size());
+		}
 	}
 
 	public void draw() {
@@ -70,8 +124,8 @@ public class CurvedLine {
 				EdgeShape edge = (EdgeShape) f.getShape();
 				edge = (EdgeShape) f.getShape();
 
-				Vec2 v1 = edge.m_vertex1.add(body.getPosition()).mul(GameDemo.METER_SCALE);
-				Vec2 v2 = edge.m_vertex2.add(body.getPosition()).mul(GameDemo.METER_SCALE);
+				Vec2 v1 = edge.m_vertex1.add(body.getPosition()).mul(Doodle.METER_SCALE);
+				Vec2 v2 = edge.m_vertex2.add(body.getPosition()).mul(Doodle.METER_SCALE);
 
 				glBegin(GL_LINES);
 				glVertex2f(v1.x, v1.y);
@@ -81,5 +135,32 @@ public class CurvedLine {
 				f = f.getNext();
 			}
 		}
+	}
+
+	public void drawEraser() {
+		Vec2 pos = eraser.getPosition().mul(Doodle.METER_SCALE);
+		float cx = pos.x;
+		float cy = pos.y;
+		float r = eraser.getFixtureList().getShape().getRadius() * Doodle.METER_SCALE;
+		int segments = 16;
+
+		float theta = (float) (2.0 * Math.PI / segments);
+		float c = (float) Math.cos(theta);
+		float s = (float) Math.sin(theta);
+		float t;
+
+		float x = r;
+		float y = 0;
+
+		glColor3f(0.8f, 0.8f, 0.8f);
+		glBegin(GL_LINE_LOOP);
+		for (int i = 0; i < segments; i++) {
+			glVertex2f(x + cx, y + cy);
+
+			t = x;
+			x = c * x - s * y;
+			y = s * t + c * y;
+		}
+		glEnd();
 	}
 }
