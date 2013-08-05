@@ -19,7 +19,6 @@ import org.jbox2d.callbacks.ContactImpulse;
 import org.jbox2d.callbacks.ContactListener;
 import org.jbox2d.collision.Manifold;
 import org.jbox2d.common.Vec2;
-import org.jbox2d.dynamics.BodyType;
 import org.jbox2d.dynamics.World;
 import org.jbox2d.dynamics.contacts.Contact;
 import org.jdom2.JDOMException;
@@ -29,7 +28,6 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 
-import round2.GameObjects.ShapeType;
 import utility.SaveTools;
 
 /**
@@ -41,10 +39,10 @@ public class Doodle {
 
 	private static final String WINDOW_TITLE = "JBox Demo!";
 	private static final int[] WINDOW_DIMENSIONS = { 960, 720 };
+	private static final String SAVE_FILE = "res/DoodleSave.xml";
+	private static final String RESET_FILE = "res/reset.xml";
 
 	public static final float METER_SCALE = 32.0f; // 64 pixels = 1 meter?
-
-	public static SaveTools saveAndLoad;
 
 	private static World world = new World(new Vec2(0.0f, -9.8f));
 	private static GameObjects objects;
@@ -115,7 +113,7 @@ public class Doodle {
 
 		if (Keyboard.isKeyDown(Keyboard.KEY_R)) {
 			try {
-				saveAndLoad.reset(lines, objects, man);
+				SaveTools.load(RESET_FILE, lines, objects, man);
 			} catch (JDOMException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
@@ -124,7 +122,7 @@ public class Doodle {
 		} else if (Keyboard.isKeyDown(Keyboard.KEY_S)
 				&& (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL))) {
 			try {
-				saveAndLoad.save(lines, objects, man);
+				SaveTools.save(SAVE_FILE, lines, objects, man);
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
@@ -133,7 +131,7 @@ public class Doodle {
 		} else if (Keyboard.isKeyDown(Keyboard.KEY_L)
 				&& (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL))) {
 			try {
-				saveAndLoad.load(lines, objects, man);
+				SaveTools.load(SAVE_FILE, lines, objects, man);
 			} catch (JDOMException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
@@ -161,7 +159,6 @@ public class Doodle {
 	}
 
 	private static void setUpObjects() {
-		saveAndLoad = new SaveTools("res/DoodleSave.xml");
 		erase = false;
 		moveEraser = true;
 		numFootContacts = 0;
@@ -169,15 +166,29 @@ public class Doodle {
 
 		man = new StickMan(world, 0.25f, 0.5f);
 		objects = new GameObjects(world);
-		objects.createObject(ShapeType.BOX, BodyType.STATIC, 0, 0, 1000, 0, "ground", 1.0f);
-		objects.createObject(ShapeType.BOX, BodyType.DYNAMIC, 320 / METER_SCALE / 2 + 1.5f, 240 / METER_SCALE / 2 + 1,
-				0.75f, 0.75f, "box", 1.0f, 6.0f);
-		objects.createObject(ShapeType.BOX, BodyType.DYNAMIC, 320 / METER_SCALE / 2 - 1.5f, 240 / METER_SCALE / 2 + 1,
-				0.25f, 0.25f, "box", 1.0f, 6.0f, 0.3f);
+		// objects.createObject(ShapeType.BOX, BodyType.STATIC, 0, 0, 1000, 0,
+		// 0, "ground", 1.0f);
+		// objects.createObject(ShapeType.BOX, BodyType.DYNAMIC, 320 /
+		// METER_SCALE / 2 + 1.5f, 240 / METER_SCALE / 2 + 1,
+		// 0.75f, 0.75f, 0, "box", 1.0f, 6.0f);
+		// objects.createObject(ShapeType.BOX, BodyType.DYNAMIC, 320 /
+		// METER_SCALE / 2 - 1.5f, 240 / METER_SCALE / 2 + 1,
+		// 0.25f, 0.25f, 0, "box", 1.0f, 6.0f, 0.3f);
 		lines = new CurvedLine(world);
 
 		// World
 		world.setContactListener(new MyContactListener());
+
+		// Load starting settings from xml file
+		try {
+			SaveTools.load(RESET_FILE, lines, objects, man);
+		} catch (JDOMException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	private static void update() {

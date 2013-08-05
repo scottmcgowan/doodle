@@ -6,21 +6,16 @@ import static org.lwjgl.opengl.GL11.glColor3f;
 import static org.lwjgl.opengl.GL11.glEnd;
 import static org.lwjgl.opengl.GL11.glPopMatrix;
 import static org.lwjgl.opengl.GL11.glPushMatrix;
+import static org.lwjgl.opengl.GL11.glRotated;
 import static org.lwjgl.opengl.GL11.glTranslatef;
 import static org.lwjgl.opengl.GL11.glVertex2f;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jbox2d.collision.shapes.CircleShape;
-import org.jbox2d.collision.shapes.EdgeShape;
-import org.jbox2d.collision.shapes.PolygonShape;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.Body;
-import org.jbox2d.dynamics.BodyDef;
 import org.jbox2d.dynamics.BodyType;
-import org.jbox2d.dynamics.Fixture;
-import org.jbox2d.dynamics.FixtureDef;
 import org.jbox2d.dynamics.World;
 
 public class GameObjects {
@@ -30,6 +25,21 @@ public class GameObjects {
 
 	public static enum ShapeType {
 		BOX, TRIANGLE, CIRCLE, LINE;
+
+		// public ShapeType valueOf(String string) {
+		// switch (string) {
+		// case "BOX":
+		// return BOX;
+		// case "TRIANGLE":
+		// return TRIANGLE;
+		// case "CIRCLE":
+		// return CIRCLE;
+		// case "LINE":
+		// return LINE;
+		// default:
+		// return null;
+		// }
+		// }
 	}
 
 	public GameObjects(World world) {
@@ -45,6 +55,7 @@ public class GameObjects {
 
 				Vec2 bodyPosition = body.getPosition().mul(Doodle.METER_SCALE);
 				glTranslatef(bodyPosition.x, bodyPosition.y, 0);
+				glRotated(Math.toDegrees(body.getAngle()), 0, 0, 1);
 
 				switch (myBody.getType()) {
 
@@ -77,106 +88,34 @@ public class GameObjects {
 		}
 	}
 
-	public void createObject(ShapeType shapeType, BodyType bodyType, float x, float y, float param1, float param2,
-			String userData, float density) {
-		BodyDef bodyDef = new BodyDef();
-		bodyDef.position.set(x, y);
-		bodyDef.type = bodyType;
-		Body body = world.createBody(bodyDef);
-		FixtureDef fixtureDef = new FixtureDef();
-		fixtureDef.density = density;
-		fixtureDef.friction = 0.01f;
-
-		switch (shapeType) {
-		case BOX:
-			PolygonShape boxShape = new PolygonShape();
-			boxShape.setAsBox(param1, param2);
-			fixtureDef.shape = boxShape;
-			break;
-		case CIRCLE:
-			CircleShape circleShape = new CircleShape();
-			circleShape.setRadius(param1);
-			fixtureDef.shape = circleShape;
-			break;
-		case LINE:
-			EdgeShape edgeShape = new EdgeShape();
-			edgeShape.set(new Vec2(x, y), new Vec2(param1, param2));
-			fixtureDef.shape = edgeShape;
-			break;
-		case TRIANGLE:
-			break;
+	public void destroyBodies() {
+		for (MyBody myBody : bodies) {
+			Body body = myBody.getBody();
+			world.destroyBody(body);
 		}
-		Fixture boxFixture = body.createFixture(fixtureDef);
-		boxFixture.setUserData(userData);
-		bodies.add(new MyBody(body, shapeType, param1, param2));
+		bodies.clear();
+	}
+
+	public List<MyBody> getList() {
+		return bodies;
 	}
 
 	public void createObject(ShapeType shapeType, BodyType bodyType, float x, float y, float param1, float param2,
-			String userData, float density, float friction) {
-		BodyDef bodyDef = new BodyDef();
-		bodyDef.position.set(x, y);
-		bodyDef.type = bodyType;
-		Body body = world.createBody(bodyDef);
-		FixtureDef boxFixtureDef = new FixtureDef();
-		boxFixtureDef.density = density;
-		boxFixtureDef.friction = friction;
+			float angle, String userData, float density) {
 
-		switch (shapeType) {
-		case BOX:
-			PolygonShape boxShape = new PolygonShape();
-			boxShape.setAsBox(param1, param2);
-			boxFixtureDef.shape = boxShape;
-			break;
-		case CIRCLE:
-			CircleShape circleShape = new CircleShape();
-			circleShape.setRadius(param1);
-			boxFixtureDef.shape = circleShape;
-			break;
-		case LINE:
-			EdgeShape edgeShape = new EdgeShape();
-			edgeShape.set(new Vec2(x, y), new Vec2(param1, param2));
-			boxFixtureDef.shape = edgeShape;
-			break;
-		case TRIANGLE:
-			break;
-		}
-		Fixture boxFixture = body.createFixture(boxFixtureDef);
-		boxFixture.setUserData(userData);
-		bodies.add(new MyBody(body, shapeType, param1, param2));
+		bodies.add(new MyBody(world, shapeType, bodyType, x, y, param1, param2, angle, userData, density, 0.01f, 0.0f));
 	}
 
 	public void createObject(ShapeType shapeType, BodyType bodyType, float x, float y, float param1, float param2,
-			String userData, float density, float friction, float restitution) {
-		BodyDef bodyDef = new BodyDef();
-		bodyDef.position.set(x, y);
-		bodyDef.type = bodyType;
-		Body body = world.createBody(bodyDef);
-		FixtureDef boxFixtureDef = new FixtureDef();
-		boxFixtureDef.density = density;
-		boxFixtureDef.friction = friction;
-		boxFixtureDef.restitution = restitution;
+			float angle, String userData, float density, float friction) {
 
-		switch (shapeType) {
-		case BOX:
-			PolygonShape boxShape = new PolygonShape();
-			boxShape.setAsBox(param1, param2);
-			boxFixtureDef.shape = boxShape;
-			break;
-		case CIRCLE:
-			CircleShape circleShape = new CircleShape();
-			circleShape.setRadius(param1);
-			boxFixtureDef.shape = circleShape;
-			break;
-		case LINE:
-			EdgeShape edgeShape = new EdgeShape();
-			edgeShape.set(new Vec2(x, y), new Vec2(param1, param2));
-			boxFixtureDef.shape = edgeShape;
-			break;
-		case TRIANGLE:
-			break;
-		}
-		Fixture boxFixture = body.createFixture(boxFixtureDef);
-		boxFixture.setUserData(userData);
-		bodies.add(new MyBody(body, shapeType, param1, param2));
+		bodies.add(new MyBody(world, shapeType, bodyType, x, y, param1, param2, angle, userData, density, friction, 0.0f));
+	}
+
+	public void createObject(ShapeType shapeType, BodyType bodyType, float x, float y, float param1, float param2,
+			float angle, String userData, float density, float friction, float restitution) {
+
+		bodies.add(new MyBody(world, shapeType, bodyType, x, y, param1, param2, angle, userData, density, friction,
+				restitution));
 	}
 }

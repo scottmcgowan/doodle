@@ -44,8 +44,10 @@ public class StickMan {
 
 		currentSprite = spriteMap.get("stand");
 		spriteCounter = 0;
+		
+		body = null;
 
-		makeMan(320 / Doodle.METER_SCALE / 2, 240 / Doodle.METER_SCALE / 2);
+		// makeMan(320 / Doodle.METER_SCALE / 2, 240 / Doodle.METER_SCALE / 2);
 	}
 
 	public void makeMan(float x, float y) {
@@ -79,8 +81,9 @@ public class StickMan {
 		footSensorFixture.setUserData("foot");
 	}
 
-	public void load() {
-		world.destroyBody(body);
+	public void destroyBodies() {
+		if (body != null)
+			world.destroyBody(body);
 	}
 
 	private static void setUpSpriteSheets() {

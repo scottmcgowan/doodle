@@ -9,6 +9,7 @@ import java.util.List;
 import org.jbox2d.collision.shapes.EdgeShape;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.Body;
+import org.jbox2d.dynamics.BodyType;
 import org.jbox2d.dynamics.Fixture;
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -18,6 +19,8 @@ import org.jdom2.output.XMLOutputter;
 
 import round2.CurvedLine;
 import round2.GameObjects;
+import round2.GameObjects.ShapeType;
+import round2.MyBody;
 import round2.StickMan;
 
 /**
@@ -26,28 +29,19 @@ import round2.StickMan;
  */
 public class SaveTools {
 
-	private String fileName;
-
-	/**
-	 * 
-	 * @param filename
-	 */
-	public SaveTools(String fileName) {
-		this.fileName = fileName;
-	}
-
-	public void load(CurvedLine lines, GameObjects objects, StickMan man) throws JDOMException, IOException {
+	public static void load(String fileName, CurvedLine lines, GameObjects objects, StickMan man) throws JDOMException, IOException {
 		SAXBuilder builder = new SAXBuilder();
 		Document document = builder.build(fileName);
 		Element root = document.getRootElement();
 		List<Element> children = root.getChildren();
-		List<Body> temp = new ArrayList<Body>();
-		lines.load();
-		man.load();
+		List<Body> tempLines = new ArrayList<Body>();
+		lines.destroyBodies();
+		objects.destroyBodies();
+		man.destroyBodies();
 
 		for (Element b : children) {
 			switch (b.getName()) {
-			
+
 			case "body":
 				float x = Float.parseFloat(b.getAttributeValue("x"));
 				float y = Float.parseFloat(b.getAttributeValue("y"));
@@ -61,12 +55,24 @@ public class SaveTools {
 					float y2 = Float.parseFloat(e.getAttributeValue("y2"));
 					lines.createEdgeFixture(body, new Vec2(x1, y1), new Vec2(x2, y2));
 				}
-				temp.add(body);
+				tempLines.add(body);
 				break;
-				
+
 			case "object":
+				ShapeType shapeType = ShapeType.valueOf(b.getAttributeValue("shapeType"));
+				BodyType bodyType = BodyType.valueOf(b.getAttributeValue("bodyType"));
+				x = Float.parseFloat(b.getAttributeValue("x"));
+				y = Float.parseFloat(b.getAttributeValue("y"));
+				float param1 = Float.parseFloat(b.getAttributeValue("param1"));
+				float param2 = Float.parseFloat(b.getAttributeValue("param2"));
+				float angle = Float.parseFloat(b.getAttributeValue("angle"));
+				String userData = b.getAttributeValue("userData");
+				float density = Float.parseFloat(b.getAttributeValue("density"));
+				float friction = Float.parseFloat(b.getAttributeValue("friction"));
+				float restitution = Float.parseFloat(b.getAttributeValue("restitution"));
+				objects.createObject(shapeType, bodyType, x, y, param1, param2, angle, userData, density, friction, restitution);
 				break;
-				
+
 			case "man":
 				x = Float.parseFloat(b.getAttributeValue("x"));
 				y = Float.parseFloat(b.getAttributeValue("y"));
@@ -74,14 +80,14 @@ public class SaveTools {
 				break;
 			}
 		}
-		lines.setLines(temp);
+		lines.setLines(tempLines);
 	}
 
-	public void save(CurvedLine curve, GameObjects objects, StickMan man) throws FileNotFoundException, IOException {
+	public static void save(String fileName, CurvedLine curve, GameObjects objects, StickMan man) throws FileNotFoundException, IOException {
 		Document document = new Document();
 		Element root = new Element("doodles");
 		document.setRootElement(root);
-		
+
 		// Lines
 		List<Body> bodies = curve.getLines();
 
@@ -105,59 +111,36 @@ public class SaveTools {
 			}
 			root.addContent(bodyElement);
 		}
-		
+
 		// Objects
-		
-		
+		List<MyBody> objectList = objects.getList();
+
+		for (MyBody myBody : objectList) {
+			Body body = myBody.getBody();
+			Vec2 pos = body.getPosition();
+			Element objectElement = new Element("object");
+			objectElement.setAttribute("shapeType", String.valueOf(myBody.getType()));
+			objectElement.setAttribute("bodyType", String.valueOf(body.getType()));
+			objectElement.setAttribute("x", String.valueOf(pos.x));
+			objectElement.setAttribute("y", String.valueOf(pos.y));
+			objectElement.setAttribute("param1", String.valueOf(myBody.getParam1()));
+			objectElement.setAttribute("param2", String.valueOf(myBody.getParam2()));
+			objectElement.setAttribute("angle", String.valueOf(body.getAngle()));
+			objectElement.setAttribute("userData", myBody.getUserData());
+			objectElement.setAttribute("density", String.valueOf(myBody.getDensity()));
+			objectElement.setAttribute("friction", String.valueOf(myBody.getFriction()));
+			objectElement.setAttribute("restitution", String.valueOf(myBody.getRestitution()));
+			root.addContent(objectElement);
+		}
+
 		// Stick man
 		Element manElement = new Element("man");
 		Vec2 pos = man.getPosition();
 		manElement.setAttribute("x", String.valueOf(pos.x));
 		manElement.setAttribute("y", String.valueOf(pos.y));
 		root.addContent(manElement);
-		
+
 		XMLOutputter output = new XMLOutputter();
 		output.output(document, new FileOutputStream(fileName));
-	}
-	
-	public void reset(CurvedLine lines, GameObjects objects, StickMan man) throws JDOMException, IOException {
-		SAXBuilder builder = new SAXBuilder();
-		Document document = builder.build("res/reset.xml");
-		Element root = document.getRootElement();
-		List<Element> children = root.getChildren();
-		List<Body> temp = new ArrayList<Body>();
-		lines.load();
-		man.load();
-
-		for (Element b : children) {
-			switch (b.getName()) {
-			
-			case "body":
-				float x = Float.parseFloat(b.getAttributeValue("x"));
-				float y = Float.parseFloat(b.getAttributeValue("y"));
-				Body body = lines.createBody(x, y);
-				List<Element> bChildren = b.getChildren();
-
-				for (Element e : bChildren) {
-					float x1 = Float.parseFloat(e.getAttributeValue("x1"));
-					float y1 = Float.parseFloat(e.getAttributeValue("y1"));
-					float x2 = Float.parseFloat(e.getAttributeValue("x2"));
-					float y2 = Float.parseFloat(e.getAttributeValue("y2"));
-					lines.createEdgeFixture(body, new Vec2(x1, y1), new Vec2(x2, y2));
-				}
-				temp.add(body);
-				break;
-				
-			case "object":
-				break;
-				
-			case "man":
-				x = Float.parseFloat(b.getAttributeValue("x"));
-				y = Float.parseFloat(b.getAttributeValue("y"));
-				man.makeMan(x, y);
-				break;
-			}
-		}
-		lines.setLines(temp);
 	}
 }

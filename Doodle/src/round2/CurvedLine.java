@@ -85,7 +85,7 @@ public class CurvedLine {
 		manFixture.setUserData("line");
 	}
 
-	public void load() {
+	public void destroyBodies() {
 		for (Body b : bodies) {
 			world.destroyBody(b);
 		}
