@@ -47,7 +47,6 @@ public class Doodle {
 	public static SaveTools saveAndLoad;
 
 	private static World world = new World(new Vec2(0.0f, -9.8f));
-	// private static Set<Body> bodies = new HashSet<Body>();
 	private static GameObjects objects;
 	private static StickMan man;
 	private static CurvedLine lines;
