@@ -6,6 +6,7 @@ import static org.lwjgl.opengl.GL11.glBegin;
 import static org.lwjgl.opengl.GL11.glColor3f;
 import static org.lwjgl.opengl.GL11.glEnd;
 import static org.lwjgl.opengl.GL11.glVertex2f;
+import static org.lwjgl.opengl.GL11.glLineWidth;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,11 +30,14 @@ public class CurvedLine {
 	public Body eraser;
 
 	public CurvedLine(World world) {
-		prev = null;
 		this.world = world;
+		prev = null;
 		bodies = new ArrayList<Body>();
 		toRemove = new ArrayList<Fixture>();
+		createEraser();
+	}
 
+	private void createEraser() {
 		// Eraser setup
 		BodyDef eraserDef = new BodyDef();
 		eraserDef.type = BodyType.DYNAMIC;
@@ -51,36 +55,50 @@ public class CurvedLine {
 		eraserFixtureDef.isSensor = true;
 		Fixture eraserFixture = eraser.createFixture(eraserFixtureDef);
 		eraserFixture.setUserData("eraser");
+	}
 
+	public Body createBody(float x, float y) {
+		// Body def
+		BodyDef lineDef = new BodyDef();
+		lineDef.type = BodyType.STATIC;
+
+		// create body
+		lineDef.position.set(x, y);
+		Body body = world.createBody(lineDef);
+		bodies.add(body);
+		return body;
+	}
+	
+	public void createEdgeFixture(Body body, Vec2 v1, Vec2 v2) {
+		// Shape def
+		EdgeShape lineShape = new EdgeShape();
+		lineShape.set(v1, v2);
+		
+		// Fixture def
+		FixtureDef manFixtureDef = new FixtureDef();
+		manFixtureDef.density = 1.0f;
+		manFixtureDef.shape = lineShape;
+		manFixtureDef.friction = 1.0f;
+		
+		// add main fixture
+		Fixture manFixture = body.createFixture(manFixtureDef);
+		manFixture.setUserData("line");
+	}
+
+	public void load() {
+		for (Body b : bodies) {
+			world.destroyBody(b);
+		}
 	}
 
 	public void addVertex(Vec2 vec) {
 		if (prev == null) {
-			// Body def
-			BodyDef lineDef = new BodyDef();
-			lineDef.type = BodyType.STATIC;
-
-			// create body
-			lineDef.position.set(vec.x, vec.y);
-			bodies.add(world.createBody(lineDef));
+			createBody(vec.x, vec.y);
 			prev = new Vec2(0.0f, 0.0f);
 		} else {
 			Body body = bodies.get(bodies.size() - 1);
-
-			// Shape def
-			EdgeShape lineShape = new EdgeShape();
 			vec = vec.sub(body.getPosition());
-			lineShape.set(prev, vec);
-
-			// Fixture def
-			FixtureDef manFixtureDef = new FixtureDef();
-			manFixtureDef.density = 1.0f;
-			manFixtureDef.shape = lineShape;
-			manFixtureDef.friction = 1.0f;
-
-			// add main fixture
-			Fixture manFixture = body.createFixture(manFixtureDef);
-			manFixture.setUserData("line");
+			createEdgeFixture(body, prev, vec);
 			prev = vec;
 		}
 	}
@@ -105,7 +123,7 @@ public class CurvedLine {
 		for (int i = 0; i < toRemove.size(); i++) {
 			Fixture f = toRemove.remove(i);
 			Body body = f.getBody();
-//			System.out.println(body + ", " + f);
+			// System.out.println(body + ", " + f);
 			if (body != null) { // TEMPORARY FIX, FIGURE OUT BUG!!!
 				body.destroyFixture(f);
 				if (body.m_fixtureCount <= 0) {
@@ -120,6 +138,7 @@ public class CurvedLine {
 		for (Body body : bodies) {
 			Fixture f = body.getFixtureList();
 			glColor3f(1, 1, 1);
+			glLineWidth(2.0f);
 			while (f != null) {
 				EdgeShape edge = (EdgeShape) f.getShape();
 				edge = (EdgeShape) f.getShape();

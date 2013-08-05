@@ -6,42 +6,30 @@ import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_CULL_FACE;
 import static org.lwjgl.opengl.GL11.GL_MODELVIEW;
 import static org.lwjgl.opengl.GL11.GL_PROJECTION;
-import static org.lwjgl.opengl.GL11.GL_QUADS;
-import static org.lwjgl.opengl.GL11.glBegin;
 import static org.lwjgl.opengl.GL11.glClear;
-import static org.lwjgl.opengl.GL11.glColor3f;
 import static org.lwjgl.opengl.GL11.glCullFace;
 import static org.lwjgl.opengl.GL11.glEnable;
-import static org.lwjgl.opengl.GL11.glEnd;
 import static org.lwjgl.opengl.GL11.glMatrixMode;
 import static org.lwjgl.opengl.GL11.glOrtho;
-import static org.lwjgl.opengl.GL11.glPopMatrix;
-import static org.lwjgl.opengl.GL11.glPushMatrix;
-import static org.lwjgl.opengl.GL11.glRotated;
-import static org.lwjgl.opengl.GL11.glTranslatef;
-import static org.lwjgl.opengl.GL11.glVertex2f;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import org.jbox2d.callbacks.ContactImpulse;
 import org.jbox2d.callbacks.ContactListener;
 import org.jbox2d.collision.Manifold;
-import org.jbox2d.collision.shapes.PolygonShape;
 import org.jbox2d.common.Vec2;
-import org.jbox2d.dynamics.Body;
-import org.jbox2d.dynamics.BodyDef;
 import org.jbox2d.dynamics.BodyType;
-import org.jbox2d.dynamics.Fixture;
-import org.jbox2d.dynamics.FixtureDef;
 import org.jbox2d.dynamics.World;
 import org.jbox2d.dynamics.contacts.Contact;
+import org.jdom2.JDOMException;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 
+import round2.GameObjects.ShapeType;
 import utility.SaveTools;
 
 /**
@@ -59,8 +47,8 @@ public class Doodle {
 	public static SaveTools saveAndLoad;
 
 	private static World world = new World(new Vec2(0.0f, -9.8f));
-	private static Set<Body> bodies = new HashSet<Body>();
-	private static Body ground;
+	// private static Set<Body> bodies = new HashSet<Body>();
+	private static GameObjects objects;
 	private static StickMan man;
 	private static CurvedLine lines;
 	private static Boolean moveEraser;
@@ -70,30 +58,7 @@ public class Doodle {
 
 	private static void render() {
 		glClear(GL_COLOR_BUFFER_BIT);
-		for (Body body : bodies) {
-			if (body.getType() == BodyType.DYNAMIC) {
-				glPushMatrix();
-
-				Vec2 bodyPosition = body.getPosition().mul(METER_SCALE);
-				glTranslatef(bodyPosition.x, bodyPosition.y, 0);
-				glRotated(Math.toDegrees(body.getAngle()), 0, 0, 1);
-
-				float x = -0.25f * METER_SCALE;
-				float y = -0.5f * METER_SCALE;
-				float x2 = 0.25f * METER_SCALE;
-				float y2 = 0.5f * METER_SCALE;
-
-				glColor3f(0.25f, 0.25f, 0.25f);
-				glBegin(GL_QUADS);
-				glVertex2f(x, y);
-				glVertex2f(x2, y);
-				glVertex2f(x2, y2);
-				glVertex2f(x, y2);
-				glEnd();
-
-				glPopMatrix();
-			}
-		}
+		objects.draw();
 		lines.draw();
 		if (erase)
 			lines.drawEraser();
@@ -107,7 +72,7 @@ public class Doodle {
 
 		// Erase Fixtures
 		lines.removeFixtures();
-		
+
 		// Keep eraser behind mouse
 		if (!erase)
 			moveEraser = true;
@@ -132,7 +97,7 @@ public class Doodle {
 			man.move("stop", numFootContacts);
 
 		// Jump
-		if (Keyboard.isKeyDown(Keyboard.KEY_W)) {
+		if (Keyboard.isKeyDown(Keyboard.KEY_W) || Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
 			if (numFootContacts >= 1 && jumpWait == 0) {
 				jumpWait = 2;
 				man.move("jump", numFootContacts);
@@ -149,9 +114,33 @@ public class Doodle {
 			erase = false;
 		}
 
-		if (Keyboard.isKeyDown(Keyboard.KEY_S)
+		if (Keyboard.isKeyDown(Keyboard.KEY_R)) {
+			try {
+				saveAndLoad.reset(lines, objects, man);
+			} catch (JDOMException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} else if (Keyboard.isKeyDown(Keyboard.KEY_S)
 				&& (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL))) {
-			System.out.println("Save");
+			try {
+				saveAndLoad.save(lines, objects, man);
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} else if (Keyboard.isKeyDown(Keyboard.KEY_L)
+				&& (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL))) {
+			try {
+				saveAndLoad.load(lines, objects, man);
+			} catch (JDOMException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
 		}
 	}
 
@@ -173,41 +162,20 @@ public class Doodle {
 	}
 
 	private static void setUpObjects() {
+		saveAndLoad = new SaveTools("res/DoodleSave.xml");
 		erase = false;
 		moveEraser = true;
 		numFootContacts = 0;
 		jumpWait = 0;
 
 		man = new StickMan(world, 0.25f, 0.5f);
+		objects = new GameObjects(world);
+		objects.createObject(ShapeType.BOX, BodyType.STATIC, 0, 0, 1000, 0, "ground", 1.0f);
+		objects.createObject(ShapeType.BOX, BodyType.DYNAMIC, 320 / METER_SCALE / 2 + 1.5f, 240 / METER_SCALE / 2 + 1,
+				0.75f, 0.75f, "box", 1.0f, 6.0f);
+		objects.createObject(ShapeType.BOX, BodyType.DYNAMIC, 320 / METER_SCALE / 2 - 1.5f, 240 / METER_SCALE / 2 + 1,
+				0.25f, 0.25f, "box", 1.0f, 6.0f, 0.3f);
 		lines = new CurvedLine(world);
-
-		BodyDef groundDef = new BodyDef();
-		groundDef.position.set(0, 0);
-		groundDef.type = BodyType.STATIC;
-		PolygonShape groundShape = new PolygonShape();
-		groundShape.setAsBox(1000, 0);
-		ground = world.createBody(groundDef);
-		FixtureDef groundFixtureDef = new FixtureDef();
-		groundFixtureDef.density = 1;
-		groundFixtureDef.shape = groundShape;
-		groundFixtureDef.friction = 0.01f;
-		Fixture groundFixture = ground.createFixture(groundFixtureDef);
-		groundFixture.setUserData("ground");
-		bodies.add(ground);
-
-		BodyDef boxDef = new BodyDef();
-		boxDef.position.set(320 / METER_SCALE / 2 + 1, 240 / METER_SCALE / 2 + 1);
-		boxDef.type = BodyType.DYNAMIC;
-		PolygonShape boxShape = new PolygonShape();
-		boxShape.setAsBox(0.25f, 0.5f);
-		Body box = world.createBody(boxDef);
-		FixtureDef boxFixtureDef = new FixtureDef();
-		boxFixtureDef.density = 0.6f;
-		boxFixtureDef.shape = boxShape;
-		boxFixtureDef.friction = 6f;
-		Fixture boxFixture = box.createFixture(boxFixtureDef);
-		boxFixture.setUserData("box");
-		bodies.add(box);
 
 		// World
 		world.setContactListener(new MyContactListener());

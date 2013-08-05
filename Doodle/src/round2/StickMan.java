@@ -31,10 +31,12 @@ public class StickMan {
 	private static int spritesheet;
 	private Sprite currentSprite;
 	private int spriteCounter;
+	private World world;
 	private Body body;
 	private float hx, hy;
 
 	public StickMan(World world, float hx, float hy) {
+		this.world = world;
 		this.hx = hx;
 		this.hy = hy;
 
@@ -43,6 +45,10 @@ public class StickMan {
 		currentSprite = spriteMap.get("stand");
 		spriteCounter = 0;
 
+		makeMan(320 / Doodle.METER_SCALE / 2, 240 / Doodle.METER_SCALE / 2);
+	}
+
+	public void makeMan(float x, float y) {
 		// Body def
 		BodyDef manDef = new BodyDef();
 		manDef.type = BodyType.DYNAMIC;
@@ -59,7 +65,7 @@ public class StickMan {
 		manFixtureDef.friction = 0.001f;
 
 		// create body
-		manDef.position.set(320 / Doodle.METER_SCALE / 2, 240 / Doodle.METER_SCALE / 2);
+		manDef.position.set(x, y);
 		body = world.createBody(manDef);
 
 		// add main fixture
@@ -67,10 +73,14 @@ public class StickMan {
 		manFixture.setUserData("man");
 
 		// add foot sensor fixture
-		manShape.setAsBox(0.22f, 0.02f, new Vec2(0f, -0.5f), 0);
+		manShape.setAsBox(0.21f, 0.01f, new Vec2(0f, -0.5f), 0);
 		manFixtureDef.isSensor = true;
 		Fixture footSensorFixture = body.createFixture(manFixtureDef);
 		footSensorFixture.setUserData("foot");
+	}
+
+	public void load() {
+		world.destroyBody(body);
 	}
 
 	private static void setUpSpriteSheets() {
@@ -135,8 +145,10 @@ public class StickMan {
 	public void move(String direction, int footContacts) {
 		switch (direction) {
 		case "left":
-			if (body.getLinearVelocity().x > -1.5)
+			if (body.getLinearVelocity().x > -1.5f)
 				body.applyLinearImpulse(new Vec2(-0.1f, 0), body.getPosition());
+			else
+				body.setLinearVelocity(new Vec2(-1.4f, body.getLinearVelocity().y));
 			if (footContacts <= 0) {
 				currentSprite = spriteMap.get("jumpL");
 			} else {
@@ -156,8 +168,10 @@ public class StickMan {
 			}
 			break;
 		case "right":
-			if (body.getLinearVelocity().x < 1.5)
+			if (body.getLinearVelocity().x < 1.5f)
 				body.applyLinearImpulse(new Vec2(0.1f, 0), body.getPosition());
+			else
+				body.setLinearVelocity(new Vec2(1.4f, body.getLinearVelocity().y));
 			if (footContacts <= 0) {
 				currentSprite = spriteMap.get("jumpR");
 			} else {
