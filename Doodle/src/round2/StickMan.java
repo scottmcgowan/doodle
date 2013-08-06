@@ -23,6 +23,12 @@ import org.jdom2.input.SAXBuilder;
 
 import utility.ImagingTools;
 
+/**
+ * A class for the player object
+ * 
+ * @author Scott McGowan and Logan Barnes
+ * 
+ */
 public class StickMan {
 
 	private static final String SPRITESHEET_IMAGE_LOCATION = "res/manSprite.png";
@@ -35,6 +41,17 @@ public class StickMan {
 	private Body body;
 	private float hx, hy;
 
+	/**
+	 * Sets up and stores the basic height and image info for the stick man.
+	 * Does not create the appropriate JBox2D objects.
+	 * 
+	 * @param world
+	 *            - the JBox2D world in which the character will exist
+	 * @param hx
+	 *            - the width of the stick man from the center to an edge
+	 * @param hy
+	 *            - the height of the stick man from the center to an edge
+	 */
 	public StickMan(World world, float hx, float hy) {
 		this.world = world;
 		this.hx = hx;
@@ -46,10 +63,16 @@ public class StickMan {
 		spriteCounter = 0;
 
 		body = null;
-
-		// makeMan(320 / Doodle.METER_SCALE / 2, 240 / Doodle.METER_SCALE / 2);
 	}
 
+	/**
+	 * Creates the JBox2D body, shape, and fixtures.
+	 * 
+	 * @param x
+	 *            - the x coordinate of the stick man
+	 * @param y
+	 *            - the y coordinate of the stick man
+	 */
 	public void makeMan(float x, float y) {
 		// Body def
 		BodyDef manDef = new BodyDef();
@@ -66,26 +89,33 @@ public class StickMan {
 		manFixtureDef.shape = manShape;
 		manFixtureDef.friction = 0.001f;
 
-		// create body
+		// Create body
 		manDef.position.set(x, y);
 		body = world.createBody(manDef);
 
-		// add main fixture
+		// Add main fixture
 		Fixture manFixture = body.createFixture(manFixtureDef);
 		manFixture.setUserData("man");
 
-		// add foot sensor fixture
-		manShape.setAsBox(0.21f, 0.01f, new Vec2(0f, -0.5f), 0);
+		// Add foot sensor fixture to determine if the player is on something.
+		manShape.setAsBox(hx * 0.8f, 0.01f, new Vec2(0f, -hy), 0);
 		manFixtureDef.isSensor = true;
 		Fixture footSensorFixture = body.createFixture(manFixtureDef);
 		footSensorFixture.setUserData("foot");
 	}
 
-	public void destroyBodies() {
+	/*
+	 * Deletes the current body in preparation to load a new one.
+	 */
+	public void destroyBody() {
 		if (body != null)
 			world.destroyBody(body);
 	}
 
+	/**
+	 * Loads a sprite sheet and initializes a list of Sprite objects. Each
+	 * Sprite object contains the location and size of an individual image.
+	 */
 	private static void setUpSpriteSheets() {
 		spritesheet = ImagingTools.glLoadTextureLinear(SPRITESHEET_IMAGE_LOCATION);
 		SAXBuilder builder = new SAXBuilder();
@@ -108,38 +138,50 @@ public class StickMan {
 		}
 	}
 
+	/**
+	 * Renders the stick man in the game window
+	 */
 	public void draw() {
-		// System.out.println("Man: " + body.getPosition());
-		// StickMan
+
+		// Save the current matrix data before translating and/or rotating it.
 		glPushMatrix();
+
+		// Get the stick man's center position and move the rendering matrix.
+		// Note: rotation not needed since stick man has a fixed rotation.
 		Vec2 bodyPosition = body.getPosition().mul(Doodle.METER_SCALE);
 		glTranslatef(bodyPosition.x, bodyPosition.y, 0);
-		glRotated(Math.toDegrees(body.getAngle()), 0, 0, 1);
 
+		// Convert the Box2D center location to openGL edge coordinates.
 		float x = -hx * Doodle.METER_SCALE;
 		float y = -hy * Doodle.METER_SCALE;
 		float x2 = hx * Doodle.METER_SCALE;
 		float y2 = hy * Doodle.METER_SCALE;
 
+		// Set a white background and select the texture image.
 		glColor3f(1, 1, 1);
 		glBindTexture(GL_TEXTURE_RECTANGLE_ARB, spritesheet);
 
+		// Get the appropriate coordinates for the selected sprite image.
 		int imgX = currentSprite.getX();
 		int imgY = currentSprite.getY();
 		int imgX2 = imgX + currentSprite.getWidth();
 		int imgY2 = imgY + currentSprite.getHeight();
 
+		// Draws the stick man rectangle from the given vertices
+		// (counter-clockwise) and maps the image coordinates to each
+		// corresponding vertex.
 		glBegin(GL_QUADS);
-		glTexCoord2f(imgX, imgY2);
+		glTexCoord2f(imgX, imgY2); // bottom left
 		glVertex2f(x, y);
-		glTexCoord2f(imgX2, imgY2);
+		glTexCoord2f(imgX2, imgY2); // bottom right
 		glVertex2f(x2, y);
-		glTexCoord2f(imgX2, imgY);
+		glTexCoord2f(imgX2, imgY); // top right
 		glVertex2f(x2, y2);
-		glTexCoord2f(imgX, imgY);
+		glTexCoord2f(imgX, imgY); // top left
 		glVertex2f(x, y2);
 		glEnd();
 
+		// Restore the texture and matrix data.
 		glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
 		glPopMatrix();
 
@@ -161,6 +203,8 @@ public class StickMan {
 				body.applyLinearImpulse(new Vec2(-0.1f, 0), body.getPosition());
 			else
 				body.setLinearVelocity(new Vec2(-1.4f, body.getLinearVelocity().y));
+
+			// Check if man is airborne then set appropriate sprite image.
 			if (footContacts <= 0) {
 				currentSprite = spriteMap.get("jumpL");
 			} else {
@@ -169,6 +213,8 @@ public class StickMan {
 			break;
 		case "stop":
 			body.setLinearVelocity(new Vec2(0, body.getLinearVelocity().y));
+
+			// Check if man is airborne then set appropriate sprite image.
 			if (footContacts <= 0) {
 				if (body.getLinearVelocity().x >= 0) {
 					currentSprite = spriteMap.get("jumpR");
@@ -184,6 +230,8 @@ public class StickMan {
 				body.applyLinearImpulse(new Vec2(0.1f, 0), body.getPosition());
 			else
 				body.setLinearVelocity(new Vec2(1.4f, body.getLinearVelocity().y));
+
+			// Check if man is airborne then set appropriate sprite image.
 			if (footContacts <= 0) {
 				currentSprite = spriteMap.get("jumpR");
 			} else {
@@ -191,22 +239,28 @@ public class StickMan {
 			}
 			break;
 		case "jump":
+
+			// Only jump if stick man's "feet" are on an object. Otherwise
+			// select the appropriate sprite image.
 			if (footContacts > 0)
 				body.applyLinearImpulse(new Vec2(0, 0.27f), body.getPosition());
-			if (footContacts <= 0) {
+			else {
 				if (body.getLinearVelocity().x >= 0) {
 					currentSprite = spriteMap.get("jumpR");
 				} else {
 					currentSprite = spriteMap.get("jumpL");
 				}
-			} else {
-				currentSprite = spriteMap.get("stand");
 			}
 			break;
 		}
 		spriteCounter = (spriteCounter + 1) % 30;
 	}
 
+	/**
+	 * Returns the position of the stick man.
+	 * 
+	 * @return a Vec2 of the stick man's center position
+	 */
 	public Vec2 getPosition() {
 		return body.getPosition();
 	}

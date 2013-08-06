@@ -52,11 +52,12 @@ public class SaveTools {
 		List<Body> tempLines = new ArrayList<Body>();
 		lines.destroyBodies();
 		objects.destroyBodies();
-		man.destroyBodies();
+		man.destroyBody();
 
 		for (Element b : children) {
 			switch (b.getName()) {
 
+			// Lines
 			case "body":
 				float x = Float.parseFloat(b.getAttributeValue("x"));
 				float y = Float.parseFloat(b.getAttributeValue("y"));
@@ -73,6 +74,7 @@ public class SaveTools {
 				tempLines.add(body);
 				break;
 
+			// Objects
 			case "object":
 				ShapeType shapeType = ShapeType.valueOf(b.getAttributeValue("shapeType"));
 				BodyType bodyType = BodyType.valueOf(b.getAttributeValue("bodyType"));
@@ -89,6 +91,7 @@ public class SaveTools {
 						restitution);
 				break;
 
+			// Stick man
 			case "man":
 				x = Float.parseFloat(b.getAttributeValue("x"));
 				y = Float.parseFloat(b.getAttributeValue("y"));

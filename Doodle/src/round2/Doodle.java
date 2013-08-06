@@ -32,6 +32,9 @@ import utility.SaveTools;
 
 /**
  * Main class for Doodle game.
+ * 
+ * @author Scott McGowan and Logan Barnes
+ * 
  */
 public class Doodle {
 
