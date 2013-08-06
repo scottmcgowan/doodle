@@ -68,18 +68,18 @@ public class CurvedLine {
 		bodies.add(body);
 		return body;
 	}
-	
+
 	public void createEdgeFixture(Body body, Vec2 v1, Vec2 v2) {
 		// Shape def
 		EdgeShape lineShape = new EdgeShape();
 		lineShape.set(v1, v2);
-		
+
 		// Fixture def
 		FixtureDef manFixtureDef = new FixtureDef();
 		manFixtureDef.density = 1.0f;
 		manFixtureDef.shape = lineShape;
 		manFixtureDef.friction = 1.0f;
-		
+
 		// add main fixture
 		Fixture manFixture = body.createFixture(manFixtureDef);
 		manFixture.setUserData("line");
@@ -91,6 +91,13 @@ public class CurvedLine {
 		}
 	}
 
+	/**
+	 * Adds the next vertex to the current curved line segment. If no such line
+	 * segment exists a new segment is initialized at the given vertex.
+	 * 
+	 * @param vec
+	 *            - a vertex to be added to the curved line segment.
+	 */
 	public void addVertex(Vec2 vec) {
 		if (prev == null) {
 			createBody(vec.x, vec.y);
@@ -111,6 +118,9 @@ public class CurvedLine {
 		this.bodies = bodies;
 	}
 
+	/**
+	 * Ends the current curved line segment.
+	 */
 	public void stop() {
 		prev = null;
 	}

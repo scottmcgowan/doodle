@@ -44,7 +44,7 @@ public class StickMan {
 
 		currentSprite = spriteMap.get("stand");
 		spriteCounter = 0;
-		
+
 		body = null;
 
 		// makeMan(320 / Doodle.METER_SCALE / 2, 240 / Doodle.METER_SCALE / 2);
@@ -145,6 +145,15 @@ public class StickMan {
 
 	}
 
+	/**
+	 * Moves the player in the desired direction and allows the character to
+	 * jump if is standing on at least one object.
+	 * 
+	 * @param direction
+	 *            - string representing the direction of movement
+	 * @param footContacts
+	 *            - number of objects the player is standing on
+	 */
 	public void move(String direction, int footContacts) {
 		switch (direction) {
 		case "left":
@@ -182,7 +191,8 @@ public class StickMan {
 			}
 			break;
 		case "jump":
-			body.applyLinearImpulse(new Vec2(0, 0.27f), body.getPosition());
+			if (footContacts > 0)
+				body.applyLinearImpulse(new Vec2(0, 0.27f), body.getPosition());
 			if (footContacts <= 0) {
 				if (body.getLinearVelocity().x >= 0) {
 					currentSprite = spriteMap.get("jumpR");

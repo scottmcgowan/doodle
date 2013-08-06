@@ -29,7 +29,22 @@ import round2.StickMan;
  */
 public class SaveTools {
 
-	public static void load(String fileName, CurvedLine lines, GameObjects objects, StickMan man) throws JDOMException, IOException {
+	/**
+	 * Loads the given game objects from the given xml file.
+	 * 
+	 * @param fileName
+	 *            - the file name for the xml file.
+	 * @param lines
+	 *            - the curved lines from the game.
+	 * @param objects
+	 *            - the game objects from the game.
+	 * @param man
+	 *            - the stick man from the game.
+	 * @throws JDOMException
+	 * @throws IOException
+	 */
+	public static void load(String fileName, CurvedLine lines, GameObjects objects, StickMan man) throws JDOMException,
+			IOException {
 		SAXBuilder builder = new SAXBuilder();
 		Document document = builder.build(fileName);
 		Element root = document.getRootElement();
@@ -70,7 +85,8 @@ public class SaveTools {
 				float density = Float.parseFloat(b.getAttributeValue("density"));
 				float friction = Float.parseFloat(b.getAttributeValue("friction"));
 				float restitution = Float.parseFloat(b.getAttributeValue("restitution"));
-				objects.createObject(shapeType, bodyType, x, y, param1, param2, angle, userData, density, friction, restitution);
+				objects.createObject(shapeType, bodyType, x, y, param1, param2, angle, userData, density, friction,
+						restitution);
 				break;
 
 			case "man":
@@ -83,13 +99,28 @@ public class SaveTools {
 		lines.setLines(tempLines);
 	}
 
-	public static void save(String fileName, CurvedLine curve, GameObjects objects, StickMan man) throws FileNotFoundException, IOException {
+	/**
+	 * Saves the current game state to the given xml file.
+	 * 
+	 * @param fileName
+	 *            - the file name for the xml file.
+	 * @param lines
+	 *            - the curved lines from the game.
+	 * @param objects
+	 *            - the game objects from the game.
+	 * @param man
+	 *            - the stick man from the game.
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	public static void save(String fileName, CurvedLine lines, GameObjects objects, StickMan man)
+			throws FileNotFoundException, IOException {
 		Document document = new Document();
 		Element root = new Element("doodles");
 		document.setRootElement(root);
 
 		// Lines
-		List<Body> bodies = curve.getLines();
+		List<Body> bodies = lines.getLines();
 
 		for (Body body : bodies) {
 			Element bodyElement = new Element("body");
