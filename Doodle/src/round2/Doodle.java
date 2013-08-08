@@ -50,6 +50,8 @@ public class Doodle {
 	public static final float METER_SCALE = 32.0f; // 64 pixels = 1 meter?
 
 	public static Vec2 TRANSLATE = new Vec2(0, 0);
+	public static float SCROLL_VALUE = 1.5f;
+	public static boolean SCROLL = false;
 
 	private static World world = new World(new Vec2(0.0f, -9.8f));
 	private static GameObjects objects;
@@ -103,23 +105,24 @@ public class Doodle {
 		// Only moves eraser every other time step to prevent wobbling.
 		moveEraser = !moveEraser;
 
-		// System.out.println(man.getPosition().mul(METER_SCALE).mul(SCALE_DIFF));
-		Vec2 manPos = man.getPosition().mul(METER_SCALE).mul(SCALE_DIFF);
-		float maxXDiff = manPos.x - WINDOW_DIMENSIONS[0] * 5 / 8;
-		float minXDiff = manPos.x - WINDOW_DIMENSIONS[0] * 1 / 8;
-		float maxYDiff = manPos.y - WINDOW_DIMENSIONS[1] * 3 / 4;
-		float minYDiff = manPos.y - WINDOW_DIMENSIONS[1] * 1 / 4;
-		// System.out.println("maxXDiff: " + maxXDiff + ", Trans.x: " +
-		// TRANSLATE.x);
-		if (maxXDiff > TRANSLATE.x * SCALE_DIFF) {
-			TRANSLATE.x = maxXDiff / SCALE_DIFF;
-		} else if (minXDiff < TRANSLATE.x * SCALE_DIFF) {
-			TRANSLATE.x = minXDiff / SCALE_DIFF;
-		}
-		if (minYDiff < TRANSLATE.y * SCALE_DIFF) {
-			TRANSLATE.y = minYDiff / SCALE_DIFF;
-		} else if (maxYDiff > TRANSLATE.y * SCALE_DIFF) {
-			TRANSLATE.y = maxYDiff / SCALE_DIFF;
+		// Allows the screen to scroll when based on character position.
+		if (SCROLL) {
+			Vec2 manPos = man.getPosition().mul(METER_SCALE).mul(SCALE_DIFF);
+			float maxXDiff = manPos.x - WINDOW_DIMENSIONS[0] * 5 / 8;
+			float minXDiff = manPos.x - WINDOW_DIMENSIONS[0] * 1 / 8;
+			float maxYDiff = manPos.y - WINDOW_DIMENSIONS[1] * 3 / 4;
+			float minYDiff = manPos.y - WINDOW_DIMENSIONS[1] * 1 / 4;
+			
+			if (maxXDiff > TRANSLATE.x * SCALE_DIFF) {
+				TRANSLATE.x = maxXDiff / SCALE_DIFF;
+			} else if (minXDiff < TRANSLATE.x * SCALE_DIFF) {
+				TRANSLATE.x = minXDiff / SCALE_DIFF;
+			}
+			if (minYDiff < TRANSLATE.y * SCALE_DIFF) {
+				TRANSLATE.y = minYDiff / SCALE_DIFF;
+			} else if (maxYDiff > TRANSLATE.y * SCALE_DIFF) {
+				TRANSLATE.y = maxYDiff / SCALE_DIFF;
+			}
 		}
 	}
 
@@ -206,6 +209,36 @@ public class Doodle {
 				e.printStackTrace();
 				cleanUp(true);
 			}
+		}
+
+		// Mouse scrolling when SHIFT is keyed.
+		if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)) {
+			SCROLL = false;
+			float mouseX = Mouse.getX();
+			float mouseY = Mouse.getY();
+			System.out.println(mouseY);
+			if (mouseX > 0 && mouseX < WINDOW_DIMENSIONS[0] && mouseY > 0 && mouseY < WINDOW_DIMENSIONS[1] - 1) {
+				if (mouseX > WINDOW_DIMENSIONS[0] * 7 / 8) {
+					TRANSLATE.x += SCROLL_VALUE;
+					if (mouseX > WINDOW_DIMENSIONS[0] * 15 / 16)
+						TRANSLATE.x += SCROLL_VALUE;
+				} else if (mouseX < WINDOW_DIMENSIONS[0] * 1 / 8) {
+					TRANSLATE.x -= SCROLL_VALUE;
+					if (mouseX < WINDOW_DIMENSIONS[0] * 1 / 16)
+						TRANSLATE.x -= SCROLL_VALUE;
+				}
+				if (mouseY > WINDOW_DIMENSIONS[1] * 7 / 8) {
+					TRANSLATE.y += SCROLL_VALUE;
+					if (mouseY > WINDOW_DIMENSIONS[1] * 15 / 16)
+						TRANSLATE.y += SCROLL_VALUE;
+				} else if (mouseY < WINDOW_DIMENSIONS[1] * 1 / 8) {
+					TRANSLATE.y -= SCROLL_VALUE;
+					if (mouseY < WINDOW_DIMENSIONS[1] * 1 / 16)
+						TRANSLATE.y -= SCROLL_VALUE;
+				}
+			}
+		} else {
+			SCROLL = true;
 		}
 	}
 
