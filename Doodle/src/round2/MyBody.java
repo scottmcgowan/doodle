@@ -74,9 +74,9 @@ public class MyBody {
 		FixtureDef fixtureDef = new FixtureDef();
 		fixtureDef.density = density;
 		fixtureDef.friction = friction;
-		fixtureDef.restitution = restitution;
+		fixtureDef.restitution = restitution;getClass();
 
-		switch (type) {
+		switch (shapeType) {
 		case BOX:
 			PolygonShape boxShape = new PolygonShape();
 			boxShape.setAsBox(param1, param2);

@@ -5,8 +5,11 @@ import static org.lwjgl.opengl.GL11.GL_LINE_LOOP;
 import static org.lwjgl.opengl.GL11.glBegin;
 import static org.lwjgl.opengl.GL11.glColor3f;
 import static org.lwjgl.opengl.GL11.glEnd;
-import static org.lwjgl.opengl.GL11.glVertex2f;
 import static org.lwjgl.opengl.GL11.glLineWidth;
+import static org.lwjgl.opengl.GL11.glPushMatrix;
+import static org.lwjgl.opengl.GL11.glPopMatrix;
+import static org.lwjgl.opengl.GL11.glTranslatef;
+import static org.lwjgl.opengl.GL11.glVertex2f;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -204,14 +207,17 @@ public class CurvedLine {
 	 * Renders the curved lines in the game window.
 	 */
 	public void draw() {
+		// Set the color and width.
+		glColor3f(1, 1, 1);
+		glLineWidth(2.0f);
 
 		// Iterate through all the line bodies.
 		for (Body body : bodies) {
 			Fixture f = body.getFixtureList();
 
-			// Set the color and width.
-			glColor3f(1, 1, 1);
-			glLineWidth(2.0f);
+			glPushMatrix();
+			Vec2 bodyPosition = body.getPosition().mul(Doodle.METER_SCALE);
+			glTranslatef(bodyPosition.x - Doodle.TRANSLATE.x, bodyPosition.y - Doodle.TRANSLATE.y, 0);
 
 			// Iterate through all the lines on each body.
 			while (f != null) {
@@ -219,8 +225,8 @@ public class CurvedLine {
 				edge = (EdgeShape) f.getShape();
 
 				// Get the ending vertices for each line segment.
-				Vec2 v1 = edge.m_vertex1.add(body.getPosition()).mul(Doodle.METER_SCALE);
-				Vec2 v2 = edge.m_vertex2.add(body.getPosition()).mul(Doodle.METER_SCALE);
+				Vec2 v1 = edge.m_vertex1.mul(Doodle.METER_SCALE);
+				Vec2 v2 = edge.m_vertex2.mul(Doodle.METER_SCALE);
 
 				// Draw the line from one vertex to the other.
 				glBegin(GL_LINES);
@@ -231,6 +237,7 @@ public class CurvedLine {
 				// Get the next line segment.
 				f = f.getNext();
 			}
+			glPopMatrix();
 		}
 	}
 
@@ -238,12 +245,17 @@ public class CurvedLine {
 	 * Renders the eraser object when necessary.
 	 */
 	public void drawEraser() {
+
+		glPushMatrix();
 		// Gets the eraser's center position and radius.
 		Vec2 pos = eraser.getPosition().mul(Doodle.METER_SCALE);
-		float cx = pos.x;
-		float cy = pos.y;
+		glTranslatef(pos.x - Doodle.TRANSLATE.x, pos.y - Doodle.TRANSLATE.y, 0);
+
+		float cx = 0;
+		float cy = 0;
 		float r = eraser.getFixtureList().getShape().getRadius() * Doodle.METER_SCALE;
-		int segments = 16; // Sides of the polygon representing the circle.
+		int segments = (int) r * 2; // Sides of the polygon representing the
+									// circle.
 
 		// Calculate trig constants.
 		float theta = (float) (2.0 * Math.PI / segments);
@@ -269,5 +281,6 @@ public class CurvedLine {
 			y = s * t + c * y;
 		}
 		glEnd();
+		glPopMatrix();
 	}
 }

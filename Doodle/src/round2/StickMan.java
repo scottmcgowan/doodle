@@ -149,7 +149,7 @@ public class StickMan {
 		// Get the stick man's center position and move the rendering matrix.
 		// Note: rotation not needed since stick man has a fixed rotation.
 		Vec2 bodyPosition = body.getPosition().mul(Doodle.METER_SCALE);
-		glTranslatef(bodyPosition.x, bodyPosition.y, 0);
+		glTranslatef(bodyPosition.x - Doodle.TRANSLATE.x, bodyPosition.y - Doodle.TRANSLATE.y, 0);
 
 		// Convert the Box2D center location to openGL edge coordinates.
 		float x = -hx * Doodle.METER_SCALE;
@@ -193,10 +193,8 @@ public class StickMan {
 	 * 
 	 * @param direction
 	 *            - string representing the direction of movement
-	 * @param footContacts
-	 *            - number of objects the player is standing on
 	 */
-	public void move(String direction, int footContacts) {
+	public void move(String direction) {
 		switch (direction) {
 		case "left":
 			if (body.getLinearVelocity().x > -1.5f)
@@ -205,7 +203,7 @@ public class StickMan {
 				body.setLinearVelocity(new Vec2(-1.4f, body.getLinearVelocity().y));
 
 			// Check if man is airborne then set appropriate sprite image.
-			if (footContacts <= 0) {
+			if (Doodle.numFootContacts <= 0) {
 				currentSprite = spriteMap.get("jumpL");
 			} else {
 				currentSprite = spriteMap.get("left" + (spriteCounter / 10));
@@ -215,7 +213,7 @@ public class StickMan {
 			body.setLinearVelocity(new Vec2(0, body.getLinearVelocity().y));
 
 			// Check if man is airborne then set appropriate sprite image.
-			if (footContacts <= 0) {
+			if (Doodle.numFootContacts <= 0) {
 				if (body.getLinearVelocity().x >= 0) {
 					currentSprite = spriteMap.get("jumpR");
 				} else {
@@ -232,7 +230,7 @@ public class StickMan {
 				body.setLinearVelocity(new Vec2(1.4f, body.getLinearVelocity().y));
 
 			// Check if man is airborne then set appropriate sprite image.
-			if (footContacts <= 0) {
+			if (Doodle.numFootContacts <= 0) {
 				currentSprite = spriteMap.get("jumpR");
 			} else {
 				currentSprite = spriteMap.get("right" + (spriteCounter / 10));
@@ -242,7 +240,7 @@ public class StickMan {
 
 			// Only jump if stick man's "feet" are on an object. Otherwise
 			// select the appropriate sprite image.
-			if (footContacts > 0)
+			if (Doodle.numFootContacts > 0)
 				body.applyLinearImpulse(new Vec2(0, 0.27f), body.getPosition());
 			else {
 				if (body.getLinearVelocity().x >= 0) {

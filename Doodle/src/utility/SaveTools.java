@@ -18,6 +18,7 @@ import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.XMLOutputter;
 
 import round2.CurvedLine;
+import round2.Doodle;
 import round2.GameObjects;
 import round2.GameObjects.ShapeType;
 import round2.MyBody;
@@ -76,30 +77,33 @@ public class SaveTools {
 
 			// Objects
 			case "object":
-				ShapeType shapeType = ShapeType.valueOf(b.getAttributeValue("shapeType"));
-				BodyType bodyType = BodyType.valueOf(b.getAttributeValue("bodyType"));
-				x = Float.parseFloat(b.getAttributeValue("x"));
-				y = Float.parseFloat(b.getAttributeValue("y"));
-				float param1 = Float.parseFloat(b.getAttributeValue("param1"));
-				float param2 = Float.parseFloat(b.getAttributeValue("param2"));
-				float angle = Float.parseFloat(b.getAttributeValue("angle"));
-				String userData = b.getAttributeValue("userData");
-				float density = Float.parseFloat(b.getAttributeValue("density"));
-				float friction = Float.parseFloat(b.getAttributeValue("friction"));
-				float restitution = Float.parseFloat(b.getAttributeValue("restitution"));
-				objects.createObject(shapeType, bodyType, x, y, param1, param2, angle, userData, density, friction,
-						restitution);
+//				if (!ShapeType.valueOf(b.getAttributeValue("shapeType")).equals(ShapeType.CIRCLE)) {
+					ShapeType shapeType = ShapeType.valueOf(b.getAttributeValue("shapeType"));
+					BodyType bodyType = BodyType.valueOf(b.getAttributeValue("bodyType"));
+					x = Float.parseFloat(b.getAttributeValue("x"));
+					y = Float.parseFloat(b.getAttributeValue("y"));
+					float param1 = Float.parseFloat(b.getAttributeValue("param1"));
+					float param2 = Float.parseFloat(b.getAttributeValue("param2"));
+					float angle = Float.parseFloat(b.getAttributeValue("angle"));
+					String userData = b.getAttributeValue("userData");
+					float density = Float.parseFloat(b.getAttributeValue("density"));
+					float friction = Float.parseFloat(b.getAttributeValue("friction"));
+					float restitution = Float.parseFloat(b.getAttributeValue("restitution"));
+					objects.createObject(shapeType, bodyType, x, y, param1, param2, angle, userData, density, friction,
+							restitution);
+//				}
 				break;
 
 			// Stick man
 			case "man":
 				x = Float.parseFloat(b.getAttributeValue("x"));
 				y = Float.parseFloat(b.getAttributeValue("y"));
-				man.makeMan(x, y);
+				man.makeMan(x, y + 0.25f);
 				break;
 			}
 		}
 		lines.setLines(tempLines);
+		Doodle.numFootContacts = 0;
 	}
 
 	/**
@@ -150,28 +154,30 @@ public class SaveTools {
 		List<MyBody> objectList = objects.getList();
 
 		for (MyBody myBody : objectList) {
-			Body body = myBody.getBody();
-			Vec2 pos = body.getPosition();
-			Element objectElement = new Element("object");
-			objectElement.setAttribute("shapeType", String.valueOf(myBody.getType()));
-			objectElement.setAttribute("bodyType", String.valueOf(body.getType()));
-			objectElement.setAttribute("x", String.valueOf(pos.x));
-			objectElement.setAttribute("y", String.valueOf(pos.y));
-			objectElement.setAttribute("param1", String.valueOf(myBody.getParam1()));
-			objectElement.setAttribute("param2", String.valueOf(myBody.getParam2()));
-			objectElement.setAttribute("angle", String.valueOf(body.getAngle()));
-			objectElement.setAttribute("userData", myBody.getUserData());
-			objectElement.setAttribute("density", String.valueOf(myBody.getDensity()));
-			objectElement.setAttribute("friction", String.valueOf(myBody.getFriction()));
-			objectElement.setAttribute("restitution", String.valueOf(myBody.getRestitution()));
-			root.addContent(objectElement);
+//			if (myBody.getType() != ShapeType.CIRCLE) {
+				Body body = myBody.getBody();
+				Vec2 pos = body.getPosition();
+				Element objectElement = new Element("object");
+				objectElement.setAttribute("shapeType", String.valueOf(myBody.getType()));
+				objectElement.setAttribute("bodyType", String.valueOf(body.getType()));
+				objectElement.setAttribute("x", String.valueOf(pos.x));
+				objectElement.setAttribute("y", String.valueOf(pos.y));
+				objectElement.setAttribute("param1", String.valueOf(myBody.getParam1()));
+				objectElement.setAttribute("param2", String.valueOf(myBody.getParam2()));
+				objectElement.setAttribute("angle", String.valueOf(body.getAngle()));
+				objectElement.setAttribute("userData", myBody.getUserData());
+				objectElement.setAttribute("density", String.valueOf(myBody.getDensity()));
+				objectElement.setAttribute("friction", String.valueOf(myBody.getFriction()));
+				objectElement.setAttribute("restitution", String.valueOf(myBody.getRestitution()));
+				root.addContent(objectElement);
+//			}
 		}
 
 		// Stick man
 		Element manElement = new Element("man");
 		Vec2 pos = man.getPosition();
 		manElement.setAttribute("x", String.valueOf(pos.x));
-		manElement.setAttribute("y", String.valueOf(pos.y));
+		manElement.setAttribute("y", String.valueOf(pos.y + 0.15f));
 		root.addContent(manElement);
 
 		XMLOutputter output = new XMLOutputter();

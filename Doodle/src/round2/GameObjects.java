@@ -1,5 +1,6 @@
 package round2;
 
+import static org.lwjgl.opengl.GL11.GL_LINE_LOOP;
 import static org.lwjgl.opengl.GL11.GL_QUADS;
 import static org.lwjgl.opengl.GL11.glBegin;
 import static org.lwjgl.opengl.GL11.glColor3f;
@@ -55,57 +56,92 @@ public class GameObjects {
 			Body body = myBody.getBody();
 
 			// Render stationary objects
-			if (body.getType() == BodyType.STATIC) {}
+			if (body.getType() == BodyType.STATIC) {
+				glColor3f(0.4f, 0.4f, 0.4f);
+			}
 
 			// Render moveable objects not affected by physics.
 			if (body.getType() == BodyType.KINEMATIC) {}
 
 			// Render moveable objects.
 			if (body.getType() == BodyType.DYNAMIC) {
-
-				// Save the current matrix data before translation/rotation.
-				glPushMatrix();
-
-				// Get the object's center and move the rendering matrix.
-				Vec2 bodyPosition = body.getPosition().mul(Doodle.METER_SCALE);
-				glTranslatef(bodyPosition.x, bodyPosition.y, 0);
-				glRotated(Math.toDegrees(body.getAngle()), 0, 0, 1);
-
-				// Draw each shape accordingly.
-				switch (myBody.getType()) {
-
-				case BOX:
-					// Get the coordinates for each edge of the box.
-					float x = -myBody.getParam1() * Doodle.METER_SCALE;
-					float y = -myBody.getParam2() * Doodle.METER_SCALE;
-					float x2 = myBody.getParam1() * Doodle.METER_SCALE;
-					float y2 = myBody.getParam2() * Doodle.METER_SCALE;
-
-					// Set the color then draw the box by vertex.
-					glColor3f(0.25f, 0.25f, 0.25f);
-					glBegin(GL_QUADS);
-					glVertex2f(x, y);
-					glVertex2f(x2, y);
-					glVertex2f(x2, y2);
-					glVertex2f(x, y2);
-					glEnd();
-
-				case CIRCLE:
-					// TODO: Render circles.
-					break;
-
-				case LINE:
-					// TODO: Render lines.
-					break;
-
-				case TRIANGLE:
-					// TODO: Render triangles (if needed for game).
-					break;
-				}
-
-				// Restore matrix to its previous state.
-				glPopMatrix();
+				glColor3f(0.25f, 0.25f, 0.25f);
 			}
+
+			// Save the current matrix data before translation/rotation.
+			glPushMatrix();
+
+			// Get the object's center and move the rendering matrix.
+			Vec2 bodyPosition = body.getPosition().mul(Doodle.METER_SCALE);
+			glTranslatef(bodyPosition.x - Doodle.TRANSLATE.x, bodyPosition.y - Doodle.TRANSLATE.y, 0);
+			glRotated(Math.toDegrees(body.getAngle()), 0, 0, 1);
+
+			// Draw each shape accordingly.
+			switch (myBody.getType()) {
+
+			case BOX:
+				// Get the coordinates for each edge of the box.
+				float x = -myBody.getParam1() * Doodle.METER_SCALE;
+				float y = -myBody.getParam2() * Doodle.METER_SCALE;
+				float x2 = myBody.getParam1() * Doodle.METER_SCALE;
+				float y2 = myBody.getParam2() * Doodle.METER_SCALE;
+
+				// Set the color then draw the box by vertex.
+				glBegin(GL_QUADS);
+				glVertex2f(x, y);
+				glVertex2f(x2, y);
+				glVertex2f(x2, y2);
+				glVertex2f(x, y2);
+				glEnd();
+				break;
+
+			case CIRCLE:
+				// Gets the circle's center position and radius.
+				float cx = 0;
+				float cy = 0;
+				float r = body.getFixtureList().getShape().getRadius() * Doodle.METER_SCALE;
+				// System.out.println(r);
+				int segments = (int) r * 2; // Sides of the polygon
+											// representing the circle.
+
+				// Calculate trig constants.
+				float theta = (float) (2.0 * Math.PI / segments);
+				float c = (float) Math.cos(theta);
+				float s = (float) Math.sin(theta);
+				float t;
+
+				// Start at angle zero or coordinate (r, 0).
+				x = r;
+				y = 0;
+
+				// Set color and render polygon.
+				glColor3f(0.8f, 0.8f, 0.8f);
+				glBegin(GL_LINE_LOOP);
+
+				// Rotate through the vertices
+				for (int i = 0; i < segments; i++) {
+					glVertex2f(x + cx, y + cy); // Output vertex.
+
+					// Apply a rotation matrix.
+					t = x;
+					x = c * x - s * y;
+					y = s * t + c * y;
+				}
+				glEnd();
+				break;
+
+			case LINE:
+				// TODO: Render lines.
+				break;
+
+			case TRIANGLE:
+				// TODO: Render triangles (if needed for game).
+				break;
+			}
+
+			// Restore matrix to its previous state.
+			glPopMatrix();
+
 		}
 	}
 

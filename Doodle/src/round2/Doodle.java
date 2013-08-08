@@ -19,6 +19,7 @@ import org.jbox2d.callbacks.ContactImpulse;
 import org.jbox2d.callbacks.ContactListener;
 import org.jbox2d.collision.Manifold;
 import org.jbox2d.common.Vec2;
+import org.jbox2d.dynamics.BodyType;
 import org.jbox2d.dynamics.World;
 import org.jbox2d.dynamics.contacts.Contact;
 import org.jdom2.JDOMException;
@@ -27,6 +28,8 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
+
+import round2.GameObjects.ShapeType;
 
 import utility.SaveTools;
 
@@ -40,18 +43,21 @@ public class Doodle {
 
 	private static final String WINDOW_TITLE = "JBox Demo!";
 	private static final int[] WINDOW_DIMENSIONS = { 960, 720 };
+	private static final int SCALE_DIFF = 2;
 	private static final String SAVE_FILE = "res/DoodleSave.xml";
 	private static final String RESET_FILE = "res/reset.xml";
-	
+
 	public static final float METER_SCALE = 32.0f; // 64 pixels = 1 meter?
-	
+
+	public static Vec2 TRANSLATE = new Vec2(0, 0);
+
 	private static World world = new World(new Vec2(0.0f, -9.8f));
 	private static GameObjects objects;
 	private static StickMan man;
 	private static CurvedLine lines;
 	private static Boolean moveEraser;
 	private static Boolean erase;
-	private static int numFootContacts;
+	public static int numFootContacts;
 	static int jumpWait;
 
 	/**
@@ -87,7 +93,8 @@ public class Doodle {
 		// the mouse in one time step (there are no position setting functions).
 		if (moveEraser) {
 			Vec2 pos = lines.eraser.getPosition();
-			Vec2 mouse = new Vec2(Mouse.getX(), Mouse.getY()).mul(1.0f / METER_SCALE).mul(1 / 3f);
+			Vec2 mouse = new Vec2(Mouse.getX(), Mouse.getY()).mul(1.0f / SCALE_DIFF).add(TRANSLATE)
+					.mul(1.0f / METER_SCALE);
 			Vec2 velocity = mouse.sub(pos).mul(60);
 			lines.eraser.setLinearVelocity(velocity);
 		} else {
@@ -95,19 +102,40 @@ public class Doodle {
 		}
 		// Only moves eraser every other time step to prevent wobbling.
 		moveEraser = !moveEraser;
+
+		// System.out.println(man.getPosition().mul(METER_SCALE).mul(SCALE_DIFF));
+		Vec2 manPos = man.getPosition().mul(METER_SCALE).mul(SCALE_DIFF);
+		float maxXDiff = manPos.x - WINDOW_DIMENSIONS[0] * 5 / 8;
+		float minXDiff = manPos.x - WINDOW_DIMENSIONS[0] * 1 / 8;
+		float maxYDiff = manPos.y - WINDOW_DIMENSIONS[1] * 3 / 4;
+		float minYDiff = manPos.y - WINDOW_DIMENSIONS[1] * 1 / 4;
+		// System.out.println("maxXDiff: " + maxXDiff + ", Trans.x: " +
+		// TRANSLATE.x);
+		if (maxXDiff > TRANSLATE.x * SCALE_DIFF) {
+			TRANSLATE.x = maxXDiff / SCALE_DIFF;
+		} else if (minXDiff < TRANSLATE.x * SCALE_DIFF) {
+			TRANSLATE.x = minXDiff / SCALE_DIFF;
+		}
+		if (minYDiff < TRANSLATE.y * SCALE_DIFF) {
+			TRANSLATE.y = minYDiff / SCALE_DIFF;
+		} else if (maxYDiff > TRANSLATE.y * SCALE_DIFF) {
+			TRANSLATE.y = maxYDiff / SCALE_DIFF;
+		}
 	}
 
 	/**
 	 * Handles the keyboard and mouse input from each time step;
 	 */
 	private static void input() {
+		// System.out.println(Doodle.numFootContacts);
+
 		// Character control. Typical WASD movement.
 		if (Keyboard.isKeyDown(Keyboard.KEY_A) && !Keyboard.isKeyDown(Keyboard.KEY_D)) {
-			man.move("left", numFootContacts);
+			man.move("left");
 		} else if (Keyboard.isKeyDown(Keyboard.KEY_D) && !Keyboard.isKeyDown(Keyboard.KEY_A)) {
-			man.move("right", numFootContacts);
+			man.move("right");
 		} else
-			man.move("stop", numFootContacts);
+			man.move("stop");
 
 		// Jump (space bar can be used to jump as well).
 		if (Keyboard.isKeyDown(Keyboard.KEY_W) || Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
@@ -116,13 +144,15 @@ public class Doodle {
 			// still near an object but not on it.
 			if (jumpWait == 0) {
 				jumpWait = 2;
-				man.move("jump", numFootContacts);
+				man.move("jump");
 			}
 		}
 
 		// Draw and erase lines. Left click to draw, right click to erase.
 		if (Mouse.isButtonDown(0) && !Mouse.isButtonDown(1)) {
-			lines.addVertex(new Vec2(Mouse.getX(), Mouse.getY()).mul(1.0f / METER_SCALE).mul(1 / 3f));
+			Vec2 mousePos = new Vec2(Mouse.getX(), Mouse.getY()).mul(1.0f / SCALE_DIFF).add(TRANSLATE)
+					.mul(1.0f / METER_SCALE);
+			lines.addVertex(mousePos);
 		} else if (Mouse.isButtonDown(1) && !Mouse.isButtonDown(0)) {
 			erase = true;
 		} else {
@@ -133,14 +163,26 @@ public class Doodle {
 		// Load, save, and reset. Ctrl + L to load; Ctrl + S to save; R to reset
 		// back to level start.
 		if (Keyboard.isKeyDown(Keyboard.KEY_R)) {
-			try {
-				SaveTools.load(RESET_FILE, lines, objects, man);
-			} catch (JDOMException e) {
-				e.printStackTrace();
-				cleanUp(true);
-			} catch (IOException e) {
-				e.printStackTrace();
-				cleanUp(true);
+			if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL)) {
+				try {
+					SaveTools.save(RESET_FILE, lines, objects, man);
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+					cleanUp(true);
+				} catch (IOException e) {
+					e.printStackTrace();
+					cleanUp(true);
+				}
+			} else {
+				try {
+					SaveTools.load(RESET_FILE, lines, objects, man);
+				} catch (JDOMException e) {
+					e.printStackTrace();
+					cleanUp(true);
+				} catch (IOException e) {
+					e.printStackTrace();
+					cleanUp(true);
+				}
 			}
 		} else if (Keyboard.isKeyDown(Keyboard.KEY_S)
 				&& (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL))) {
@@ -164,7 +206,6 @@ public class Doodle {
 				e.printStackTrace();
 				cleanUp(true);
 			}
-
 		}
 	}
 
@@ -185,7 +226,7 @@ public class Doodle {
 	 */
 	private static void setUpMatrices() {
 		glMatrixMode(GL_PROJECTION);
-		glOrtho(0, 320, 0, 240, 1, -1);
+		glOrtho(0, WINDOW_DIMENSIONS[0] / SCALE_DIFF, 0, WINDOW_DIMENSIONS[1] / SCALE_DIFF, 1, -1);
 		glMatrixMode(GL_MODELVIEW);
 	}
 
@@ -213,22 +254,30 @@ public class Doodle {
 
 		// Game objects
 		man = new StickMan(world, 0.25f, 0.5f);
+		man.makeMan(2, 3);
 		objects = new GameObjects(world);
+		objects.createObject(ShapeType.CIRCLE, BodyType.DYNAMIC, 5, 3, 0.3f, 0, 0, "circle", 0.01f, 0.1f, 0.1f);
+		objects.createObject(ShapeType.BOX, BodyType.STATIC, 0, -5, 1000, 5, 0, "ground", 1, 0.01f, 0);
+		objects.createObject(ShapeType.BOX, BodyType.DYNAMIC, 6.5F, 3, 0.75f, 0.75f, 0, "box", 3, 0.5f, 0);
+		objects.createObject(ShapeType.BOX, BodyType.DYNAMIC, 4, 3, 0.25f, 0.25f, 0, "ground", 1, 2, 0.1f);
 		lines = new CurvedLine(world);
 
 		// Game world
 		world.setContactListener(new MyContactListener());
 
 		// Load starting game settings from xml file
-		try {
-			SaveTools.load(RESET_FILE, lines, objects, man);
-		} catch (JDOMException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		// try {
+		// SaveTools.load(RESET_FILE, lines, objects, man);
+		// } catch (JDOMException e) {
+		// e.printStackTrace();
+		// } catch (IOException e) {
+		// e.printStackTrace();
+		// }
 	}
 
+	/**
+	 * Updates the display at 60 frames per second.
+	 */
 	private static void update() {
 		Display.update();
 		Display.sync(60);
@@ -274,6 +323,7 @@ public class Doodle {
 			// Get the userData from each intersecting game object
 			String dataA = (String) contact.getFixtureA().getUserData();
 			String dataB = (String) contact.getFixtureB().getUserData();
+			// System.out.println(dataA + ", " + dataB);
 
 			// If the eraser intersects with a line and 'erase' == true, erase
 			// the line.
@@ -300,7 +350,8 @@ public class Doodle {
 			// If the character's 'feet' leave an object, decrease the number of
 			// foot contacts to determine whether the player can jump or not.
 			if (dataA.equals("foot") && !dataB.equals("eraser") || dataB.equals("foot") && !dataA.equals("eraser")) {
-				numFootContacts--;
+				if (numFootContacts > 0)
+					numFootContacts--;
 			}
 		}
 
