@@ -209,7 +209,7 @@ public class CurvedLine {
 	public void draw() {
 		// Set the color and width.
 		glColor3f(1, 1, 1);
-		glLineWidth(2.0f);
+		glLineWidth(Doodle.METER_SCALE / 8);
 
 		// Iterate through all the line bodies.
 		for (Body body : bodies) {
@@ -251,10 +251,12 @@ public class CurvedLine {
 		Vec2 pos = eraser.getPosition().mul(Doodle.METER_SCALE);
 		glTranslatef(pos.x - Doodle.TRANSLATE.x, pos.y - Doodle.TRANSLATE.y, 0);
 
+		glLineWidth(Doodle.METER_SCALE / 16);
+
 		float cx = 0;
 		float cy = 0;
 		float r = eraser.getFixtureList().getShape().getRadius() * Doodle.METER_SCALE;
-		int segments = (int) r * 2; // Sides of the polygon representing the
+		int segments = (int) r * 4; // Sides of the polygon representing the
 									// circle.
 
 		// Calculate trig constants.

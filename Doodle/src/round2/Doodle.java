@@ -42,12 +42,12 @@ import utility.SaveTools;
 public class Doodle {
 
 	private static final String WINDOW_TITLE = "JBox Demo!";
-	private static final int[] WINDOW_DIMENSIONS = { 960, 720 };
-	private static final int SCALE_DIFF = 2;
+	private static final Vec2 WINDOW_DIMENSIONS = new Vec2(960, 720);
+	private static final float SCALE_DIFF = 2f;
 	private static final String SAVE_FILE = "res/DoodleSave.xml";
 	private static final String RESET_FILE = "res/reset.xml";
 
-	public static final float METER_SCALE = 32.0f; // 64 pixels = 1 meter?
+	public static float METER_SCALE = 32.0f; // 64 pixels = 1 meter?
 
 	public static Vec2 TRANSLATE = new Vec2(0, 0);
 	public static float SCROLL_VALUE = 1.5f;
@@ -108,11 +108,11 @@ public class Doodle {
 		// Allows the screen to scroll when based on character position.
 		if (SCROLL) {
 			Vec2 manPos = man.getPosition().mul(METER_SCALE).mul(SCALE_DIFF);
-			float maxXDiff = manPos.x - WINDOW_DIMENSIONS[0] * 5 / 8;
-			float minXDiff = manPos.x - WINDOW_DIMENSIONS[0] * 1 / 8;
-			float maxYDiff = manPos.y - WINDOW_DIMENSIONS[1] * 3 / 4;
-			float minYDiff = manPos.y - WINDOW_DIMENSIONS[1] * 1 / 4;
-			
+			float maxXDiff = manPos.x - WINDOW_DIMENSIONS.x * 5 / 8;
+			float minXDiff = manPos.x - WINDOW_DIMENSIONS.x * 1 / 8;
+			float maxYDiff = manPos.y - WINDOW_DIMENSIONS.y * 3 / 4;
+			float minYDiff = manPos.y - WINDOW_DIMENSIONS.y * 1 / 4;
+
 			if (maxXDiff > TRANSLATE.x * SCALE_DIFF) {
 				TRANSLATE.x = maxXDiff / SCALE_DIFF;
 			} else if (minXDiff < TRANSLATE.x * SCALE_DIFF) {
@@ -130,7 +130,6 @@ public class Doodle {
 	 * Handles the keyboard and mouse input from each time step;
 	 */
 	private static void input() {
-		// System.out.println(Doodle.numFootContacts);
 
 		// Character control. Typical WASD movement.
 		if (Keyboard.isKeyDown(Keyboard.KEY_A) && !Keyboard.isKeyDown(Keyboard.KEY_D)) {
@@ -216,30 +215,70 @@ public class Doodle {
 			SCROLL = false;
 			float mouseX = Mouse.getX();
 			float mouseY = Mouse.getY();
-			System.out.println(mouseY);
-			if (mouseX > 0 && mouseX < WINDOW_DIMENSIONS[0] && mouseY > 0 && mouseY < WINDOW_DIMENSIONS[1] - 1) {
-				if (mouseX > WINDOW_DIMENSIONS[0] * 7 / 8) {
+			if (mouseX > 0 && mouseX < WINDOW_DIMENSIONS.x && mouseY > 0 && mouseY < WINDOW_DIMENSIONS.y - 1) {
+				if (mouseX > WINDOW_DIMENSIONS.x * 6.5 / 8) {
 					TRANSLATE.x += SCROLL_VALUE;
-					if (mouseX > WINDOW_DIMENSIONS[0] * 15 / 16)
-						TRANSLATE.x += SCROLL_VALUE;
-				} else if (mouseX < WINDOW_DIMENSIONS[0] * 1 / 8) {
+					if (mouseX > WINDOW_DIMENSIONS.x * 15 / 16)
+						TRANSLATE.x += SCROLL_VALUE * 2;
+				} else if (mouseX < WINDOW_DIMENSIONS.x * 1.5 / 8) {
 					TRANSLATE.x -= SCROLL_VALUE;
-					if (mouseX < WINDOW_DIMENSIONS[0] * 1 / 16)
-						TRANSLATE.x -= SCROLL_VALUE;
+					if (mouseX < WINDOW_DIMENSIONS.x * 1 / 16)
+						TRANSLATE.x -= SCROLL_VALUE * 2;
 				}
-				if (mouseY > WINDOW_DIMENSIONS[1] * 7 / 8) {
+				if (mouseY > WINDOW_DIMENSIONS.y * 6.5 / 8) {
 					TRANSLATE.y += SCROLL_VALUE;
-					if (mouseY > WINDOW_DIMENSIONS[1] * 15 / 16)
-						TRANSLATE.y += SCROLL_VALUE;
-				} else if (mouseY < WINDOW_DIMENSIONS[1] * 1 / 8) {
+					if (mouseY > WINDOW_DIMENSIONS.y * 15 / 16)
+						TRANSLATE.y += SCROLL_VALUE * 2;
+				} else if (mouseY < WINDOW_DIMENSIONS.y * 1.5 / 8) {
 					TRANSLATE.y -= SCROLL_VALUE;
-					if (mouseY < WINDOW_DIMENSIONS[1] * 1 / 16)
-						TRANSLATE.y -= SCROLL_VALUE;
+					if (mouseY < WINDOW_DIMENSIONS.y * 1 / 16)
+						TRANSLATE.y -= SCROLL_VALUE * 2;
 				}
 			}
 		} else {
 			SCROLL = true;
 		}
+
+		// Zoom function
+		int mouseWheel = Mouse.getDWheel();
+		if (mouseWheel > 0 && METER_SCALE > 12) {
+			Vec2 oldPos = man.getPosition();
+			if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)) {
+				oldPos = new Vec2(Mouse.getX(), Mouse.getY()).mul(1 / SCALE_DIFF);
+				oldPos = oldPos.add(TRANSLATE).mul(1 / METER_SCALE);
+			}
+			zoom(oldPos, METER_SCALE - 1);
+		} else if (mouseWheel < 0 && METER_SCALE < 64) {
+			Vec2 oldPos = man.getPosition();
+			if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)) {
+				oldPos = new Vec2(Mouse.getX(), Mouse.getY()).mul(1 / SCALE_DIFF);
+				oldPos = oldPos.add(TRANSLATE).mul(1 / METER_SCALE);
+			}
+			zoom(oldPos, METER_SCALE + 1);
+		}
+
+		// Return zoom to original setting
+		if (Keyboard.isKeyDown(Keyboard.KEY_0)
+				&& (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL))) {
+			zoom(man.getPosition(), 32);
+		}
+	}
+
+	/**
+	 * Zooms in or out from the position given. Zoom factor depends on the new
+	 * meter scale given.
+	 * 
+	 * @param oldPos
+	 *            - the location where the zooming will be centered
+	 * @param newMeterScale
+	 *            - the new METER_SCALE number (will change METER_SCALE)
+	 */
+	private static void zoom(Vec2 oldPos, float newMeterScale) {
+		Vec2 oldDim = WINDOW_DIMENSIONS.mul(1 / SCALE_DIFF).mul(1 / METER_SCALE);
+		METER_SCALE = newMeterScale;
+		Vec2 newDim = WINDOW_DIMENSIONS.mul(1 / SCALE_DIFF).mul(1 / METER_SCALE);
+		Vec2 newPos = new Vec2(oldPos.x / oldDim.x * newDim.x, oldPos.y / oldDim.y * newDim.y);
+		TRANSLATE = TRANSLATE.add((oldPos.sub(newPos)).mul(METER_SCALE));
 	}
 
 	/**
@@ -259,7 +298,7 @@ public class Doodle {
 	 */
 	private static void setUpMatrices() {
 		glMatrixMode(GL_PROJECTION);
-		glOrtho(0, WINDOW_DIMENSIONS[0] / SCALE_DIFF, 0, WINDOW_DIMENSIONS[1] / SCALE_DIFF, 1, -1);
+		glOrtho(0, WINDOW_DIMENSIONS.x / SCALE_DIFF, 0, WINDOW_DIMENSIONS.y / SCALE_DIFF, 1, -1);
 		glMatrixMode(GL_MODELVIEW);
 	}
 
@@ -290,9 +329,9 @@ public class Doodle {
 		man.makeMan(2, 3);
 		objects = new GameObjects(world);
 		objects.createObject(ShapeType.CIRCLE, BodyType.DYNAMIC, 5, 3, 0.3f, 0, 0, "circle", 0.01f, 0.1f, 0.1f);
-		objects.createObject(ShapeType.BOX, BodyType.STATIC, 0, -5, 1000, 5, 0, "ground", 1, 0.01f, 0);
+		objects.createObject(ShapeType.BOX, BodyType.STATIC, 0, -10, 1000, 10, 0, "ground", 1, 0.01f, 0);
 		objects.createObject(ShapeType.BOX, BodyType.DYNAMIC, 6.5F, 3, 0.75f, 0.75f, 0, "box", 3, 0.5f, 0);
-		objects.createObject(ShapeType.BOX, BodyType.DYNAMIC, 4, 3, 0.25f, 0.25f, 0, "ground", 1, 2, 0.1f);
+		objects.createObject(ShapeType.BOX, BodyType.DYNAMIC, 4, 3, 0.25f, 0.25f, 0, "box", 1, 2, 0.1f);
 		lines = new CurvedLine(world);
 
 		// Game world
@@ -334,7 +373,7 @@ public class Doodle {
 	 */
 	private static void setUpDisplay() {
 		try {
-			Display.setDisplayMode(new DisplayMode(WINDOW_DIMENSIONS[0], WINDOW_DIMENSIONS[1]));
+			Display.setDisplayMode(new DisplayMode((int) WINDOW_DIMENSIONS.x, (int) WINDOW_DIMENSIONS.y));
 			Display.setTitle(WINDOW_TITLE);
 			Display.setVSyncEnabled(true); // Prevents flickering frames.
 			Display.create();
@@ -380,11 +419,19 @@ public class Doodle {
 			String dataA = (String) contact.getFixtureA().getUserData();
 			String dataB = (String) contact.getFixtureB().getUserData();
 
-			// If the character's 'feet' leave an object, decrease the number of
-			// foot contacts to determine whether the player can jump or not.
-			if (dataA.equals("foot") && !dataB.equals("eraser") || dataB.equals("foot") && !dataA.equals("eraser")) {
-				if (numFootContacts > 0)
-					numFootContacts--;
+			// If the eraser intersects with a line and 'erase' == true, erase
+			// the line.
+			if (dataA.equals("eraser") || dataB.equals("eraser")) {
+				if (dataA.equals("line") && erase)
+					lines.fixtureToRemove(contact.getFixtureA());
+				if (dataB.equals("line") && erase)
+					lines.fixtureToRemove(contact.getFixtureA());
+
+				// If the character's 'feet' leave an object, decrease the
+				// number of foot contacts to determine whether the player can
+				// jump or not.
+			} else if (dataA.equals("foot") || dataB.equals("foot")) {
+				numFootContacts--;
 			}
 		}
 
