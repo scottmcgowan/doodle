@@ -100,6 +100,12 @@ public class SaveTools {
 				y = Float.parseFloat(b.getAttributeValue("y"));
 				man.makeMan(x, y + 0.25f);
 				break;
+			
+			// Camera angle
+			case "display":
+				Doodle.TRANSLATE.x = Float.parseFloat(b.getAttributeValue("x"));
+				Doodle.TRANSLATE.y = Float.parseFloat(b.getAttributeValue("y"));
+				Doodle.METER_SCALE = Float.parseFloat(b.getAttributeValue("scale"));
 			}
 		}
 		lines.setLines(tempLines);
@@ -179,6 +185,13 @@ public class SaveTools {
 		manElement.setAttribute("x", String.valueOf(pos.x));
 		manElement.setAttribute("y", String.valueOf(pos.y + 0.15f));
 		root.addContent(manElement);
+		
+		// Camera
+		Element display = new Element("display");
+		display.setAttribute("x", String.valueOf(Doodle.TRANSLATE.x));
+		display.setAttribute("y", String.valueOf(Doodle.TRANSLATE.y));
+		display.setAttribute("scale", String.valueOf(Doodle.METER_SCALE));
+		root.addContent(display);
 
 		XMLOutputter output = new XMLOutputter();
 		output.output(document, new FileOutputStream(fileName));

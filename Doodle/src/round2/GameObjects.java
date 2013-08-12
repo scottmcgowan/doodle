@@ -5,6 +5,7 @@ import static org.lwjgl.opengl.GL11.GL_QUADS;
 import static org.lwjgl.opengl.GL11.glBegin;
 import static org.lwjgl.opengl.GL11.glColor3f;
 import static org.lwjgl.opengl.GL11.glEnd;
+import static org.lwjgl.opengl.GL11.glLineWidth;
 import static org.lwjgl.opengl.GL11.glPopMatrix;
 import static org.lwjgl.opengl.GL11.glPushMatrix;
 import static org.lwjgl.opengl.GL11.glRotated;
@@ -51,13 +52,14 @@ public class GameObjects {
 	 * Renders all inanimate game objects.
 	 */
 	public void draw() {
+		
 		// Iterate through the game objects
 		for (MyBody myBody : bodies) {
 			Body body = myBody.getBody();
 
 			// Render stationary objects
 			if (body.getType() == BodyType.STATIC) {
-				glColor3f(0.4f, 0.4f, 0.4f);
+				glColor3f(0.9f, 0.4f, 0.0f);
 			}
 
 			// Render moveable objects not affected by physics.
@@ -65,7 +67,7 @@ public class GameObjects {
 
 			// Render moveable objects.
 			if (body.getType() == BodyType.DYNAMIC) {
-				glColor3f(0.25f, 0.25f, 0.25f);
+				glColor3f(0.0f, 0.0f, 0.9f);
 			}
 
 			// Save the current matrix data before translation/rotation.
@@ -73,8 +75,10 @@ public class GameObjects {
 
 			// Get the object's center and move the rendering matrix.
 			Vec2 bodyPosition = body.getPosition().mul(Doodle.METER_SCALE);
-			glTranslatef(bodyPosition.x - Doodle.TRANSLATE.x, bodyPosition.y - Doodle.TRANSLATE.y, 0);
+			glTranslatef(bodyPosition.x, bodyPosition.y, 0);
 			glRotated(Math.toDegrees(body.getAngle()), 0, 0, 1);
+			
+			glLineWidth(Doodle.METER_SCALE / 16);
 
 			// Draw each shape accordingly.
 			switch (myBody.getType()) {
@@ -101,7 +105,7 @@ public class GameObjects {
 				float cy = 0;
 				float r = body.getFixtureList().getShape().getRadius() * Doodle.METER_SCALE;
 				// System.out.println(r);
-				int segments = (int) r * 2; // Sides of the polygon
+				int segments = (int) r * 4; // Sides of the polygon
 											// representing the circle.
 
 				// Calculate trig constants.
@@ -115,7 +119,7 @@ public class GameObjects {
 				y = 0;
 
 				// Set color and render polygon.
-				glColor3f(0.8f, 0.8f, 0.8f);
+				glColor3f(0.8f, 0.0f, 0.0f);
 				glBegin(GL_LINE_LOOP);
 
 				// Rotate through the vertices
