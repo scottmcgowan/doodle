@@ -59,7 +59,7 @@ public class GameObjects {
 
 			// Render stationary objects
 			if (body.getType() == BodyType.STATIC) {
-				glColor3f(0.4f, 0.4f, 0.4f);
+				glColor3f(0.9f, 0.4f, 0.0f);
 			}
 
 			// Render moveable objects not affected by physics.
@@ -67,7 +67,7 @@ public class GameObjects {
 
 			// Render moveable objects.
 			if (body.getType() == BodyType.DYNAMIC) {
-				glColor3f(0.25f, 0.25f, 0.25f);
+				glColor3f(0.0f, 0.0f, 0.9f);
 			}
 
 			// Save the current matrix data before translation/rotation.
@@ -119,7 +119,7 @@ public class GameObjects {
 				y = 0;
 
 				// Set color and render polygon.
-				glColor3f(0.8f, 0.8f, 0.8f);
+				glColor3f(0.8f, 0.0f, 0.0f);
 				glBegin(GL_LINE_LOOP);
 
 				// Rotate through the vertices

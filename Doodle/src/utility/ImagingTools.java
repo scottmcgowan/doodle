@@ -53,6 +53,7 @@ public class ImagingTools {
 
 		} catch (FileNotFoundException e) {
 			System.err.println("Texture file could not be found");
+			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

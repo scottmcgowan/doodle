@@ -208,7 +208,7 @@ public class CurvedLine {
 	 */
 	public void draw() {
 		// Set the color and width.
-		glColor3f(1, 1, 1);
+		glColor3f(0, 1, 0);
 		glLineWidth(Doodle.METER_SCALE / 8);
 
 		// Iterate through all the line bodies.
