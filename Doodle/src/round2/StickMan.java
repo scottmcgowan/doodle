@@ -92,8 +92,6 @@ public class StickMan {
 		CircleShape footShape= new CircleShape();
 		footShape.setRadius(radius);
 		footShape.m_p.set(new Vec2(0, radius - hy));
-		System.out.println(Doodle.METER_SCALE*hy);
-		System.out.println(Doodle.METER_SCALE*radius);
 
 		// Fixture def
 		FixtureDef manFixtureDef = new FixtureDef();
