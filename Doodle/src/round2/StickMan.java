@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.jbox2d.collision.shapes.CircleShape;
 import org.jbox2d.collision.shapes.PolygonShape;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.Body;
@@ -78,29 +79,53 @@ public class StickMan {
 		BodyDef manDef = new BodyDef();
 		manDef.type = BodyType.DYNAMIC;
 		manDef.fixedRotation = true;
+		manDef.linearDamping = 1.0f;
 
 		// Shape def
 		PolygonShape manShape = new PolygonShape();
-		manShape.setAsBox(hx, hy);
+		manShape.setAsBox(hx/4, hy/2);
+		
+		float radius = hx * 3/4;
+		CircleShape headShape= new CircleShape();
+		headShape.setRadius(radius);
+		headShape.m_p.set(new Vec2(0, hy - radius));
+		CircleShape footShape= new CircleShape();
+		footShape.setRadius(radius);
+		footShape.m_p.set(new Vec2(0, radius - hy));
+		System.out.println(Doodle.METER_SCALE*hy);
+		System.out.println(Doodle.METER_SCALE*radius);
 
 		// Fixture def
 		FixtureDef manFixtureDef = new FixtureDef();
-		manFixtureDef.density = 0.1f;
+		manFixtureDef.density = 0.3f;
 		manFixtureDef.shape = manShape;
 		manFixtureDef.friction = 0.001f;
+		FixtureDef headFixtureDef = new FixtureDef();
+		headFixtureDef.density = 0.1f;
+		headFixtureDef.shape = headShape;
+		headFixtureDef.friction = 0.001f;
+		FixtureDef footFixtureDef = new FixtureDef();
+		footFixtureDef.density = 0.1f;
+		footFixtureDef.shape = footShape;
+		footFixtureDef.friction = 0.001f;
 
 		// Create body
 		manDef.position.set(x, y);
 		body = world.createBody(manDef);
 
-		// Add main fixture
+		// Add main fixtures
 		Fixture manFixture = body.createFixture(manFixtureDef);
+		Fixture headFixture = body.createFixture(headFixtureDef);
+		Fixture footFixture = body.createFixture(footFixtureDef);
 		manFixture.setUserData("man");
+		headFixture.setUserData("man");
+		footFixture.setUserData("man");
 
 		// Add foot sensor fixture to determine if the player is on something.
-		manShape.setAsBox(hx * 0.8f, 0.01f, new Vec2(0f, -hy), 0);
-		manFixtureDef.isSensor = true;
-		Fixture footSensorFixture = body.createFixture(manFixtureDef);
+		footShape.setRadius(radius - 0.01f);
+		footShape.m_p.set(new Vec2(0f, radius - hy - 0.02f));
+		footFixtureDef.isSensor = true;
+		Fixture footSensorFixture = body.createFixture(footFixtureDef);
 		footSensorFixture.setUserData("foot");
 	}
 
@@ -149,7 +174,7 @@ public class StickMan {
 		// Get the stick man's center position and move the rendering matrix.
 		// Note: rotation not needed since stick man has a fixed rotation.
 		Vec2 bodyPosition = body.getPosition().mul(Doodle.METER_SCALE);
-		glTranslatef(bodyPosition.x - Doodle.TRANSLATE.x, bodyPosition.y - Doodle.TRANSLATE.y, 0);
+		glTranslatef(bodyPosition.x, bodyPosition.y, 0);
 
 		// Convert the Box2D center location to openGL edge coordinates.
 		float x = -hx * Doodle.METER_SCALE;

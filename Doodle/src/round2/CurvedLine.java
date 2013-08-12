@@ -217,7 +217,7 @@ public class CurvedLine {
 
 			glPushMatrix();
 			Vec2 bodyPosition = body.getPosition().mul(Doodle.METER_SCALE);
-			glTranslatef(bodyPosition.x - Doodle.TRANSLATE.x, bodyPosition.y - Doodle.TRANSLATE.y, 0);
+			glTranslatef(bodyPosition.x, bodyPosition.y, 0);
 
 			// Iterate through all the lines on each body.
 			while (f != null) {
@@ -249,7 +249,7 @@ public class CurvedLine {
 		glPushMatrix();
 		// Gets the eraser's center position and radius.
 		Vec2 pos = eraser.getPosition().mul(Doodle.METER_SCALE);
-		glTranslatef(pos.x - Doodle.TRANSLATE.x, pos.y - Doodle.TRANSLATE.y, 0);
+		glTranslatef(pos.x, pos.y, 0);
 
 		glLineWidth(Doodle.METER_SCALE / 16);
 

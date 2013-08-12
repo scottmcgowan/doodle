@@ -75,7 +75,7 @@ public class GameObjects {
 
 			// Get the object's center and move the rendering matrix.
 			Vec2 bodyPosition = body.getPosition().mul(Doodle.METER_SCALE);
-			glTranslatef(bodyPosition.x - Doodle.TRANSLATE.x, bodyPosition.y - Doodle.TRANSLATE.y, 0);
+			glTranslatef(bodyPosition.x, bodyPosition.y, 0);
 			glRotated(Math.toDegrees(body.getAngle()), 0, 0, 1);
 			
 			glLineWidth(Doodle.METER_SCALE / 16);

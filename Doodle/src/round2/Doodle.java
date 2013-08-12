@@ -11,6 +11,9 @@ import static org.lwjgl.opengl.GL11.glCullFace;
 import static org.lwjgl.opengl.GL11.glEnable;
 import static org.lwjgl.opengl.GL11.glMatrixMode;
 import static org.lwjgl.opengl.GL11.glOrtho;
+import static org.lwjgl.opengl.GL11.glPushMatrix;
+import static org.lwjgl.opengl.GL11.glPopMatrix;
+import static org.lwjgl.opengl.GL11.glTranslatef;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -67,11 +70,17 @@ public class Doodle {
 	 */
 	private static void render() {
 		glClear(GL_COLOR_BUFFER_BIT);
+		
+		glPushMatrix();
+		glTranslatef(-TRANSLATE.x, -TRANSLATE.y, 0);
+		
 		objects.draw();
 		lines.draw();
 		if (erase)
 			lines.drawEraser();
 		man.draw();
+		
+		glPopMatrix();
 	}
 
 	/**
@@ -145,7 +154,7 @@ public class Doodle {
 			// called again. This prevents boosted jumping when the character is
 			// still near an object but not on it.
 			if (jumpWait == 0) {
-				jumpWait = 2;
+				jumpWait = 5;
 				man.move("jump");
 			}
 		}
