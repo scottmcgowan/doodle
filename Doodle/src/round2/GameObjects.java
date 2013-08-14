@@ -1,5 +1,6 @@
 package round2;
 
+import static org.lwjgl.opengl.GL11.GL_LINES;
 import static org.lwjgl.opengl.GL11.GL_LINE_LOOP;
 import static org.lwjgl.opengl.GL11.GL_QUADS;
 import static org.lwjgl.opengl.GL11.glBegin;
@@ -15,9 +16,11 @@ import static org.lwjgl.opengl.GL11.glVertex2f;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jbox2d.collision.shapes.EdgeShape;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.Body;
 import org.jbox2d.dynamics.BodyType;
+import org.jbox2d.dynamics.Fixture;
 import org.jbox2d.dynamics.World;
 
 /**
@@ -52,7 +55,7 @@ public class GameObjects {
 	 * Renders all inanimate game objects.
 	 */
 	public void draw() {
-		
+
 		// Iterate through the game objects
 		for (MyBody myBody : bodies) {
 			Body body = myBody.getBody();
@@ -77,7 +80,7 @@ public class GameObjects {
 			Vec2 bodyPosition = body.getPosition().mul(Doodle.METER_SCALE);
 			glTranslatef(bodyPosition.x, bodyPosition.y, 0);
 			glRotated(Math.toDegrees(body.getAngle()), 0, 0, 1);
-			
+
 			glLineWidth(Doodle.METER_SCALE / 16);
 
 			// Draw each shape accordingly.
@@ -135,7 +138,16 @@ public class GameObjects {
 				break;
 
 			case LINE:
-				// TODO: Render lines.
+				glLineWidth(Doodle.METER_SCALE / 8);
+				Vec2 v2 = new Vec2(myBody.getParam1(), myBody.getParam2()).mul(Doodle.METER_SCALE);
+				v2 = v2.sub(bodyPosition);
+
+				// Draw the line from one vertex to the other.
+				glBegin(GL_LINES);
+				glVertex2f(0, 0);
+				glVertex2f(v2.x, v2.y);
+				glEnd();
+
 				break;
 
 			case TRIANGLE:
@@ -188,11 +200,15 @@ public class GameObjects {
 	 *            - a string to identify the object
 	 * @param density
 	 *            - the density of the object, usually in kg/m^2
+	 * @return the body of the newly created object
 	 */
-	public void createObject(ShapeType shapeType, BodyType bodyType, float x, float y, float param1, float param2,
+	public Body createObject(ShapeType shapeType, BodyType bodyType, float x, float y, float param1, float param2,
 			float angle, String userData, float density) {
 
-		bodies.add(new MyBody(world, shapeType, bodyType, x, y, param1, param2, angle, userData, density, 0.01f, 0.0f));
+		MyBody myBody = new MyBody(world, shapeType, bodyType, x, y, param1, param2, angle, userData, density, 0.01f,
+				0.0f);
+		bodies.add(myBody);
+		return myBody.getBody();
 	}
 
 	/**
@@ -218,12 +234,15 @@ public class GameObjects {
 	 *            - the density of the object, usually in kg/m^2
 	 * @param friction
 	 *            - the friction coefficient, usually in the range [0, 1]
+	 * @return the body of the newly created object
 	 */
-	public void createObject(ShapeType shapeType, BodyType bodyType, float x, float y, float param1, float param2,
+	public Body createObject(ShapeType shapeType, BodyType bodyType, float x, float y, float param1, float param2,
 			float angle, String userData, float density, float friction) {
 
-		bodies.add(new MyBody(world, shapeType, bodyType, x, y, param1, param2, angle, userData, density, friction,
-				0.0f));
+		MyBody myBody = new MyBody(world, shapeType, bodyType, x, y, param1, param2, angle, userData, density,
+				friction, 0.0f);
+		bodies.add(myBody);
+		return myBody.getBody();
 	}
 
 	/**
@@ -251,11 +270,52 @@ public class GameObjects {
 	 *            - the friction coefficient, usually in the range [0, 1]
 	 * @param restitution
 	 *            - the restitution (elasticity), usually in the range [0, 1]
+	 * @return the body of the newly created object
 	 */
-	public void createObject(ShapeType shapeType, BodyType bodyType, float x, float y, float param1, float param2,
+	public Body createObject(ShapeType shapeType, BodyType bodyType, float x, float y, float param1, float param2,
 			float angle, String userData, float density, float friction, float restitution) {
 
-		bodies.add(new MyBody(world, shapeType, bodyType, x, y, param1, param2, angle, userData, density, friction,
-				restitution));
+		MyBody myBody = new MyBody(world, shapeType, bodyType, x, y, param1, param2, angle, userData, density,
+				friction, restitution);
+		bodies.add(myBody);
+		return myBody.getBody();
+	}
+
+	/**
+	 * Creates a new MyBody element and adds it to the game world.
+	 * 
+	 * @param shapeType
+	 *            - the shape of the object
+	 * @param bodyType
+	 *            - the body type: static, kinematic, dynamic
+	 * @param x
+	 *            - the x coordinate position
+	 * @param y
+	 *            - the y coordinate position
+	 * @param param1
+	 *            - the width or radius of the body
+	 * @param param2
+	 *            - the height of the body (if necessary)
+	 * @param angle
+	 *            - the angle in radians of the body
+	 * @param userData
+	 *            - a string to identify the object
+	 * @param density
+	 *            - the density of the object, usually in kg/m^2
+	 * @param friction
+	 *            - the friction coefficient, usually in the range [0, 1]
+	 * @param restitution
+	 *            - the restitution (elasticity), usually in the range [0, 1]
+	 * @param filter
+	 *            - the filter group for this body
+	 * @return the body of the newly created object
+	 */
+	public Body createObject(ShapeType shapeType, BodyType bodyType, float x, float y, float param1, float param2,
+			float angle, String userData, float density, float friction, float restitution, int filter) {
+
+		MyBody myBody = new MyBody(world, shapeType, bodyType, x, y, param1, param2, angle, userData, density,
+				friction, restitution, filter);
+		bodies.add(myBody);
+		return myBody.getBody();
 	}
 }

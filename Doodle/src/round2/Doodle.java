@@ -22,9 +22,12 @@ import org.jbox2d.callbacks.ContactImpulse;
 import org.jbox2d.callbacks.ContactListener;
 import org.jbox2d.collision.Manifold;
 import org.jbox2d.common.Vec2;
+import org.jbox2d.dynamics.Body;
 import org.jbox2d.dynamics.BodyType;
 import org.jbox2d.dynamics.World;
 import org.jbox2d.dynamics.contacts.Contact;
+import org.jbox2d.dynamics.joints.JointDef;
+import org.jbox2d.dynamics.joints.RevoluteJointDef;
 import org.jdom2.JDOMException;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Keyboard;
@@ -32,6 +35,7 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 
+import round2.Enemies.EnemyType;
 import round2.GameObjects.ShapeType;
 
 import utility.SaveTools;
@@ -58,6 +62,7 @@ public class Doodle {
 
 	private static World world = new World(new Vec2(0.0f, -9.8f));
 	private static GameObjects objects;
+	private static Enemies enemies;
 	private static StickMan man;
 	private static CurvedLine lines;
 	private static Boolean moveEraser;
@@ -70,16 +75,17 @@ public class Doodle {
 	 */
 	private static void render() {
 		glClear(GL_COLOR_BUFFER_BIT);
-		
+
 		glPushMatrix();
 		glTranslatef(-TRANSLATE.x, -TRANSLATE.y, 0);
-		
+
 		objects.draw();
 		lines.draw();
 		if (erase)
 			lines.drawEraser();
+		enemies.draw(man.getPosition());
 		man.draw();
-		
+
 		glPopMatrix();
 	}
 
@@ -95,6 +101,7 @@ public class Doodle {
 
 		// Erase Fixtures
 		lines.removeFixtures();
+		enemies.remove();
 
 		// Keep eraser behind mouse
 		if (!erase)
@@ -250,7 +257,7 @@ public class Doodle {
 
 		// Zoom function
 		int mouseWheel = Mouse.getDWheel();
-		if (mouseWheel > 0 && METER_SCALE > 12) {
+		if (mouseWheel > 0 && METER_SCALE > 6) {
 			Vec2 oldPos = man.getPosition();
 			if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)) {
 				oldPos = new Vec2(Mouse.getX(), Mouse.getY()).mul(1 / SCALE_DIFF);
@@ -270,6 +277,17 @@ public class Doodle {
 		if (Keyboard.isKeyDown(Keyboard.KEY_0)
 				&& (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL))) {
 			zoom(man.getPosition(), 32);
+		}
+
+		if (Keyboard.isKeyDown(Keyboard.KEY_F)) {
+			if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL))
+				enemies.setFire(false);
+			else
+				enemies.setFire(true);
+		}
+		if (Keyboard.isKeyDown(Keyboard.KEY_B)) {
+			Vec2 mousePos = new Vec2(Mouse.getX(), Mouse.getY()).mul(1/SCALE_DIFF).add(TRANSLATE).mul(1/METER_SCALE);
+			enemies.createEnemy(EnemyType.BOMB, mousePos.x, mousePos.y);
 		}
 	}
 
@@ -327,6 +345,7 @@ public class Doodle {
 	 * Initializes variables and game objects.
 	 */
 	private static void setUpObjects() {
+		
 		// Variables
 		erase = false;
 		moveEraser = true;
@@ -337,10 +356,57 @@ public class Doodle {
 		man = new StickMan(world, 0.25f, 0.5f);
 		man.makeMan(2, 3);
 		objects = new GameObjects(world);
-		objects.createObject(ShapeType.CIRCLE, BodyType.DYNAMIC, 5, 3, 0.3f, 0, 0, "circle", 0.01f, 0.1f, 0.1f);
+		objects.createObject(ShapeType.CIRCLE, BodyType.DYNAMIC, 6.0f, 3.5f, 0.3f, 0, 0, "circle", 0.1f, 0.1f, 0.1f);
 		objects.createObject(ShapeType.BOX, BodyType.STATIC, 0, -10, 1000, 10, 0, "ground", 1, 0.01f, 0);
-		objects.createObject(ShapeType.BOX, BodyType.DYNAMIC, 6.5F, 3, 0.75f, 0.75f, 0, "box", 3, 0.5f, 0);
+		objects.createObject(ShapeType.BOX, BodyType.STATIC, -30, 20, 2, 40, 0, "wall", 1, 0.01f, 0);
+		objects.createObject(ShapeType.BOX, BodyType.STATIC, 0, 30, 100, 2, 0, "wall", 1, 0.01f, 0);
+		objects.createObject(ShapeType.BOX, BodyType.STATIC, 70, 20, 2, 40, 0, "wall", 1, 0.01f, 0);
+		objects.createObject(ShapeType.BOX, BodyType.DYNAMIC, 6.9F, 2.0f, 0.75f, 0.75f, 0, "box", 3, 0.5f, 0);
 		objects.createObject(ShapeType.BOX, BodyType.DYNAMIC, 4, 3, 0.25f, 0.25f, 0, "box", 1, 2, 0.1f);
+		objects.createObject(ShapeType.BOX, BodyType.DYNAMIC, 3, 3, 0.15f, 0.25f, 0, "box", 2, 2, 0.1f);
+		objects.createObject(ShapeType.BOX, BodyType.DYNAMIC, 3, 4, 0.15f, 0.25f, 0, "box", 2, 2, 0.1f);
+		objects.createObject(ShapeType.BOX, BodyType.DYNAMIC, 3, 5, 0.15f, 0.25f, 0, "box", 2, 2, 0.1f);
+		Body bodyA = objects.createObject(ShapeType.BOX, BodyType.DYNAMIC, 7, 6, 0.15f, 2.5f, 0, "hangWall", 2, 2, 0.1f);
+		Body bodyB = objects.createObject(ShapeType.LINE, BodyType.STATIC, 7, 8.3f, 7, 8.8f, 0, "joint", 2, 2, 0.1f);
+		RevoluteJointDef rjd = new RevoluteJointDef();
+		rjd.bodyA = bodyA;
+		rjd.bodyB = bodyB;
+		rjd.localAnchorA.set(0, 2.3f);
+		rjd.localAnchorB.set(0, 0);
+		world.createJoint(rjd);
+
+		bodyA = objects.createObject(ShapeType.BOX, BodyType.STATIC, 1, 1, 0.05f, 2, 0, "wall", 1, 0.01f, 0, -2);
+		bodyB = objects.createObject(ShapeType.BOX, BodyType.DYNAMIC, 1, 2, 0.05f, 0.1f, 0, "box", 2, 2, 0.1f, -2);
+		rjd.bodyA = bodyA;
+		rjd.bodyB = bodyB;
+		rjd.localAnchorA.set(0, 1.9f);
+		rjd.localAnchorB.set(0, 0.09f);
+		world.createJoint(rjd);
+		
+		for (int i = 0; i < 10; i++) {
+			bodyA = objects.createObject(ShapeType.BOX, BodyType.DYNAMIC, 1, 2, 0.05f, 0.1f, 0, "box", 2, 2, 0.1f, -2);
+			
+			rjd.bodyA = bodyA;
+			rjd.bodyB = bodyB;
+			rjd.localAnchorA.set(0, 0.09f);
+			rjd.localAnchorB.set(0, -0.09f);
+			world.createJoint(rjd);
+			
+			bodyB = bodyA;
+		}
+		bodyA = objects.createObject(ShapeType.BOX, BodyType.STATIC, -1, 1, 0.05f, 2, 0, "wall", 1, 0.01f, 0, -2);
+		rjd.bodyA = bodyA;
+		rjd.bodyB = bodyB;
+		rjd.localAnchorA.set(0, 1.9f);
+		rjd.localAnchorB.set(0, -0.09f);
+		world.createJoint(rjd);
+		
+		objects.createObject(ShapeType.CIRCLE, BodyType.DYNAMIC, 1.0f, 3.0f, 0.7f, 0, 0, "circle", 1.0f, 0.1f, 0.1f);
+		
+		enemies = new Enemies(world);
+		enemies.createEnemy(EnemyType.TURRET, 10, 0.25f);
+		enemies.createEnemy(EnemyType.TURRET, 10, 7);
+		enemies.createEnemy(EnemyType.BOMB, 4, 10);
 		lines = new CurvedLine(world);
 
 		// Game world
@@ -419,6 +485,22 @@ public class Doodle {
 				// whether the player can jump or not.
 			} else if (dataA.equals("foot") || dataB.equals("foot")) {
 				numFootContacts++;
+			} else if (dataA.equals("bullet")) {
+				enemies.toRemove(contact.getFixtureA().getBody());
+				if (dataB.equals("line")) {
+					lines.fixtureToRemove(contact.getFixtureB());
+				}
+			} else if (dataB.equals("bullet")) {
+				enemies.toRemove(contact.getFixtureB().getBody());
+				if (dataA.equals("line")) {
+					lines.fixtureToRemove(contact.getFixtureA());
+				}
+				// } else if (dataA.equals("projectile") &&
+				// dataB.equals("line")) {
+				// lines.fixtureToRemove(contact.getFixtureB());
+				// } else if (dataB.equals("projectile") &&
+				// dataA.equals("line")) {
+				// lines.fixtureToRemove(contact.getFixtureA());
 			}
 		}
 

@@ -74,7 +74,52 @@ public class MyBody {
 		FixtureDef fixtureDef = new FixtureDef();
 		fixtureDef.density = density;
 		fixtureDef.friction = friction;
-		fixtureDef.restitution = restitution;getClass();
+		fixtureDef.restitution = restitution;
+
+		switch (shapeType) {
+		case BOX:
+			PolygonShape boxShape = new PolygonShape();
+			boxShape.setAsBox(param1, param2);
+			fixtureDef.shape = boxShape;
+			break;
+		case CIRCLE:
+			CircleShape circleShape = new CircleShape();
+			circleShape.setRadius(param1);
+			fixtureDef.shape = circleShape;
+			break;
+		case LINE:
+			EdgeShape edgeShape = new EdgeShape();
+			edgeShape.set(new Vec2(x, y), new Vec2(param1, param2));
+			fixtureDef.shape = edgeShape;
+			break;
+		case TRIANGLE:
+			break;
+		}
+		Fixture boxFixture = body.createFixture(fixtureDef);
+		boxFixture.setUserData(userData);
+	}
+	
+	public MyBody(World world, ShapeType shapeType, BodyType bodyType, float x, float y, float param1, float param2,
+			float angle, String userData, float density, float friction, float restitution, int filter) {
+		super();
+		this.type = shapeType;
+		this.param1 = param1;
+		this.param2 = param2;
+		this.density = density;
+		this.friction = friction;
+		this.restitution = restitution;
+		this.setUserData(userData);
+
+		BodyDef bodyDef = new BodyDef();
+		bodyDef.position.set(x, y);
+		bodyDef.angle = angle;
+		bodyDef.type = bodyType;
+		body = world.createBody(bodyDef);
+		FixtureDef fixtureDef = new FixtureDef();
+		fixtureDef.density = density;
+		fixtureDef.friction = friction;
+		fixtureDef.restitution = restitution;
+		fixtureDef.filter.groupIndex = filter;
 
 		switch (shapeType) {
 		case BOX:

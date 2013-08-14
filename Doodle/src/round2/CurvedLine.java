@@ -222,7 +222,6 @@ public class CurvedLine {
 			// Iterate through all the lines on each body.
 			while (f != null) {
 				EdgeShape edge = (EdgeShape) f.getShape();
-				edge = (EdgeShape) f.getShape();
 
 				// Get the ending vertices for each line segment.
 				Vec2 v1 = edge.m_vertex1.mul(Doodle.METER_SCALE);
